@@ -2,3 +2,4 @@ lib/
 bin/
 logs/
 *.class
+.classpath
