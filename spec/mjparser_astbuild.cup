@@ -1,0 +1,129 @@
+
+package rs.ac.bg.etf.pp1;
+import java_cup.runtime.*;
+import org.apache.log4j.*;
+import rs.ac.bg.etf.pp1.ast.*;
+
+
+parser code {:
+	
+	boolean errorDetected;
+
+	Logger log = Logger.getLogger(getClass());
+	
+	public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+		done_parsing();
+		report_error(message, info);	
+	}
+	
+	public void syntax_error(Symbol cur_token){
+		report_error("\nSuntaksna greska", cur_token);	
+	}
+	
+	public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+		report_fatal_error("Fatalna greska, parsiranje se ne moze nastaviti", cur_token);	
+	}
+	
+	public void report_error(String message, Object info) {
+		errorDetected = true;
+		StringBuilder msg = new StringBuilder(message);
+		if(info instanceof Symbol)
+			msg.append(" na liniji ").append( ((Symbol)info).left );		
+		log.error(msg.toString());
+	}
+	
+:}
+
+init with {:
+	errorDetected = false;
+:}
+
+/* za presretanje lexera kad god vrati jedan token */
+scan with {:
+	Symbol s = this.getScanner().next_token();
+	if( s!=null && s.value != null)
+		log.info(s.toString() + " " + s.value.toString());
+	return s;
+:}
+
+terminal PROG, ENUM, CONST, PRINT, READ, RETURN, VOID, NEW;
+terminal PLUS, MINUS, MUL, DIV, MOD, INC ,DEC, EQUAL;
+terminal DOT, SEMI, COMMA, LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET;
+terminal COMMENT, BOOL, NUMBER, IDENT, STRING;
+
+nonterminal Statement Statement;
+nonterminal DesignatorStatement DesignatorStatement;
+nonterminal Designator Designator;
+nonterminal SignedExpr SignedExpr;
+nonterminal Expr Expr;
+nonterminal Term Term;
+nonterminal Factor Factor;
+nonterminal Instantiation Instantiation;
+nonterminal Addop Addop;
+nonterminal Mulop Mulop;
+nonterminal Type Type;
+nonterminal Array Array;
+nonterminal Enum Enum;
+nonterminal ProgName ProgName;
+nonterminal Program Program;
+nonterminal InstPrimitive InstPrimitive;
+nonterminal InstArray InstArray;
+
+Program   ::= PROG ProgName:P1 {: RESULT=new ProgramDerived1(P1); RESULT.setLine(P1left); :};
+
+ProgName ::= IDENT {: RESULT=new ProgNameDerived1(); :};
+
+Statement ::=	DesignatorStatement:D1 SEMI {: RESULT=new StatementDerived1(D1); RESULT.setLine(D1left); :}
+		  	|   READ LPAREN Designator:D1 RPAREN SEMI {: RESULT=new StatementDerived2(D1); RESULT.setLine(D1left); :}
+		  	|   PRINT LPAREN Expr:E1 RPAREN {: RESULT=new StatementDerived3(E1); RESULT.setLine(E1left); :}
+		  	|   PRINT LPAREN Expr:E1 COMMA NUMBER RPAREN SEMI {: RESULT=new StatementDerived4(E1); RESULT.setLine(E1left); :}
+		  	| {: RESULT=new StatementDerived5(); :}   /* epsilon */
+		    ;
+
+DesignatorStatement ::=   Designator:D1 EQUAL Expr:E2 {: RESULT=new DesignatorStatementDerived1(D1, E2); RESULT.setLine(D1left); :}
+					  |	  Designator:D1 INC {: RESULT=new DesignatorStatementDerived2(D1); RESULT.setLine(D1left); :}
+					  |	  Designator:D1 DEC {: RESULT=new DesignatorStatementDerived3(D1); RESULT.setLine(D1left); :}
+					  ;
+SignedExpr ::= 	MINUS Term:T1 {: RESULT=new SignedExprDerived1(T1); RESULT.setLine(T1left); :}
+			| 	Term:T1 {: RESULT=new SignedExprDerived2(T1); RESULT.setLine(T1left); :};
+							 
+Expr ::=   SignedExpr:S1 {: RESULT=new ExprDerived1(S1); RESULT.setLine(S1left); :}
+		|   Addop:A1 Term:T2 {: RESULT=new ExprDerived2(A1, T2); RESULT.setLine(A1left); :};
+		
+Term ::=   Factor:F1 {: RESULT=new TermDerived1(F1); RESULT.setLine(F1left); :} 
+		|  Mulop:M1 Factor:F2 {: RESULT=new TermDerived2(M1, F2); RESULT.setLine(M1left); :};
+
+Type ::=   IDENT {: RESULT=new TypeDerived1(); :};
+
+InstPrimitive ::= NEW Type:T1 {: RESULT=new InstPrimitiveDerived1(T1); RESULT.setLine(T1left); :};
+
+InstArray  	  ::= InstPrimitive:I1 LBRACKET Expr:E2 RBRACKET {: RESULT=new InstArrayDerived1(I1, E2); RESULT.setLine(I1left); :};
+
+Instantiation ::= InstPrimitive:I1 {: RESULT=new InstantiationDerived1(I1); RESULT.setLine(I1left); :}
+			    | InstArray:I1 {: RESULT=new InstantiationDerived2(I1); RESULT.setLine(I1left); :};
+		
+Factor ::= NUMBER {: RESULT=new FactorDerived1(); :}
+		 | STRING {: RESULT=new FactorDerived2(); :}
+		 | LPAREN Expr:E1 RPAREN {: RESULT=new FactorDerived3(E1); RESULT.setLine(E1left); :}
+		 | BOOL {: RESULT=new FactorDerived4(); :}
+		 | Instantiation:I1 {: RESULT=new FactorDerived5(I1); RESULT.setLine(I1left); :}
+		 ;
+		
+Array  ::= IDENT LBRACKET Expr:E1 RBRACKET {: RESULT=new ArrayDerived1(E1); RESULT.setLine(E1left); :};		
+
+Enum   ::= IDENT DOT IDENT {: RESULT=new EnumDerived1(); :};
+		
+Designator	::=	IDENT {: RESULT=new DesignatorDerived1(); :}
+			|	Enum:E1 {: RESULT=new DesignatorDerived2(E1); RESULT.setLine(E1left); :}
+			|   Array:A1 {: RESULT=new DesignatorDerived3(A1); RESULT.setLine(A1left); :}
+			;
+		
+Addop  ::= PLUS {: RESULT=new AddopDerived1(); :} 
+		|  MINUS {: RESULT=new AddopDerived2(); :}
+		;
+
+Mulop  ::= MUL {: RESULT=new MulopDerived1(); :}
+		|  DIV {: RESULT=new MulopDerived2(); :}
+		|  MOD {: RESULT=new MulopDerived3(); :}
+		;
+			

@@ -1,0 +1,151 @@
+
+package rs.ac.bg.etf.pp1;
+import java_cup.runtime.*;
+import org.apache.log4j.*;
+import rs.ac.bg.etf.pp1.ast.*;
+
+
+parser code {:
+	
+	boolean errorDetected;
+
+	Logger log = Logger.getLogger(getClass());
+	
+	public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+		done_parsing();
+		report_error(message, info);	
+	}
+	
+	public void syntax_error(Symbol cur_token){
+		report_error("\nSuntaksna greska", cur_token);	
+	}
+	
+	public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+		report_fatal_error("Fatalna greska, parsiranje se ne moze nastaviti", cur_token);	
+	}
+	
+	public void report_error(String message, Object info) {
+		errorDetected = true;
+		StringBuilder msg = new StringBuilder(message);
+		if(info instanceof Symbol)
+			msg.append(" na liniji ").append( ((Symbol)info).left );		
+		log.error(msg.toString());
+	}
+	
+:}
+
+init with {:
+	errorDetected = false;
+:}
+
+/* za presretanje lexera kad god vrati jedan token */
+scan with {:
+	Symbol s = this.getScanner().next_token();
+	if( s!=null && s.value != null)
+		log.info(s.toString() + " " + s.value.toString());
+	return s;
+:}
+
+terminal PROG, ENUM, CONST, PRINT, READ, RETURN, VOID, NEW;
+terminal PLUS, MINUS, MUL, DIV, MOD, INC ,DEC, EQUAL;
+terminal DOT, SEMI, COMMA, LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET;
+terminal COMMENT, BOOL, NUMBER, IDENT, STRING;
+
+nonterminal Statement, StatementList, DesignatorStatement, Designator;
+nonterminal SignedExpr, Expr, Term, Factor, Instantiation;
+nonterminal Addop, Mulop;
+nonterminal Type, Array, Enum;
+nonterminal ProgName, Program;
+nonterminal InstPrimitive, InstArray;
+nonterminal VarDeclList, MethDeclList, VarDecl, MethDecl, ArrayDecl, EnumDecl, EnumExpr, EnumExprList;
+
+Program   ::= PROG ProgName VarDeclList LBRACE MethDeclList RBRACE;
+
+ProgName ::= IDENT;
+
+VarDeclList ::= VarDeclList VarDecl
+			|   VarDecl;
+
+MethDeclList ::= MethDeclList MethDecl
+			|   MethDecl;
+
+ArrayDecl ::= Type IDENT LBRACKET NUMBER RBRACKET SEMI;
+
+EnumExpr  ::= IDENT
+			| IDENT EQUAL NUMBER 
+			;
+			
+EnumExprList ::= EnumExprList COMMA EnumExpr
+			 |	 EnumExpr
+			 |	/* epsilon */
+			 ;
+			 
+EnumDecl ::= ENUM IDENT LBRACE EnumExprList RBRACE;
+
+VarDecl  ::= ArrayDecl
+		 |   EnumDecl
+		 |   Type IDENT SEMI
+		 |   /* epsilon */
+		 ;
+
+MethDecl ::= Type IDENT LPAREN RPAREN VarDeclList LBRACE StatementList RBRACE
+         |   /* epsilon */
+         ;
+
+StatementList ::= StatementList Statement
+				| Statement;
+
+Statement ::=	DesignatorStatement SEMI
+		  	|   READ LPAREN Designator RPAREN SEMI
+		  	|   PRINT LPAREN Expr RPAREN
+		  	|   PRINT LPAREN Expr COMMA NUMBER RPAREN SEMI
+		  	|   /* epsilon */
+		    ;
+
+DesignatorStatement ::=   Designator EQUAL Expr
+					  |	  Designator INC
+					  |	  Designator DEC
+					  ;
+							 
+Expr ::= MINUS Term Addop Term
+	 |   MINUS Term
+	 ;
+
+Term ::=   Factor Mulop Factor
+	 |  Factor
+	 ;
+
+Type ::=   IDENT;
+
+InstPrimitive ::= NEW Type;
+
+InstArray  	  ::= InstPrimitive LBRACKET Expr RBRACKET;
+
+Instantiation ::= InstPrimitive
+			    | InstArray;
+		
+Factor ::= NUMBER
+		 | STRING
+		 | LPAREN Expr RPAREN
+		 | BOOL
+		 | Instantiation
+		 ;
+		
+Array  ::= IDENT LBRACKET Expr RBRACKET;		
+
+Enum   ::= IDENT DOT IDENT;
+		
+Designator	::=	IDENT
+			|	Enum
+			|   Array
+			;
+		
+Addop  ::= PLUS 
+		|  MINUS
+		;
+
+Mulop  ::= MUL
+		|  DIV
+		|  MOD
+		;
+			
