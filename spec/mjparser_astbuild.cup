@@ -46,15 +46,18 @@ scan with {:
 	return s;
 :}
 
-terminal PROG, ENUM, CONST, PRINT, READ, RETURN, VOID, NEW;
+terminal PROG, ENUM, CONST, PRINT, READ, RETURN, NEW;
 terminal PLUS, MINUS, MUL, DIV, MOD, INC ,DEC, EQUAL;
 terminal DOT, SEMI, COMMA, LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET;
-terminal COMMENT, BOOL, NUMBER, IDENT, STRING;
+terminal COMMENT, BOOL, STRING;
+terminal String IDENT;
+terminal Integer NUMBER;
 
 nonterminal Statement Statement;
+nonterminal StatementList StatementList;
 nonterminal DesignatorStatement DesignatorStatement;
 nonterminal Designator Designator;
-nonterminal SignedExpr SignedExpr;
+nonterminal SignedTerm SignedTerm;
 nonterminal Expr Expr;
 nonterminal Term Term;
 nonterminal Factor Factor;
@@ -62,68 +65,168 @@ nonterminal Instantiation Instantiation;
 nonterminal Addop Addop;
 nonterminal Mulop Mulop;
 nonterminal Type Type;
-nonterminal Array Array;
-nonterminal Enum Enum;
+nonterminal MyArray MyArray;
+nonterminal EnumUse EnumUse;
 nonterminal ProgName ProgName;
 nonterminal Program Program;
 nonterminal InstPrimitive InstPrimitive;
 nonterminal InstArray InstArray;
+nonterminal VarDeclList VarDeclList;
+nonterminal MethDeclList MethDeclList;
+nonterminal VarDecl VarDecl;
+nonterminal MethDecl MethDecl;
+nonterminal ArrayDecl ArrayDecl;
+nonterminal EnumDecl EnumDecl;
+nonterminal EnumExpr EnumExpr;
+nonterminal EnumExprList EnumExprList;
+nonterminal EnumInst EnumInst;
+nonterminal PrintStmt PrintStmt;
+nonterminal PrintParam PrintParam;
+nonterminal OptionalReturn OptionalReturn;
+nonterminal FuncCall FuncCall;
+nonterminal ConstExpr ConstExpr;
+nonterminal ConstInitializationList ConstInitializationList;
+nonterminal ConstDecl ConstDecl;
+nonterminal GlobalDeclList GlobalDeclList;
+nonterminal GlobalDecl GlobalDecl;
+nonterminal  GlobalVarDecl GlobalVarDecl;
+nonterminal OptionalParameterList OptionalParameterList;
+nonterminal ParameterList ParameterList;
+nonterminal Parameter Parameter;
 
-Program   ::= PROG ProgName:P1 {: RESULT=new ProgramDerived1(P1); RESULT.setLine(P1left); :};
+Program   ::= (ProgramProduction) PROG ProgName:P1 GlobalDeclList:G2 LBRACE MethDeclList:M3 RBRACE {: RESULT=new ProgramProduction(P1, G2, M3); RESULT.setLine(P1left); :};
 
-ProgName ::= IDENT {: RESULT=new ProgNameDerived1(); :};
+ProgName ::= (ProgNameProduction) IDENT:I1 {: RESULT=new ProgNameProduction(I1); RESULT.setLine(I1left); :};
 
-Statement ::=	DesignatorStatement:D1 SEMI {: RESULT=new StatementDerived1(D1); RESULT.setLine(D1left); :}
-		  	|   READ LPAREN Designator:D1 RPAREN SEMI {: RESULT=new StatementDerived2(D1); RESULT.setLine(D1left); :}
-		  	|   PRINT LPAREN Expr:E1 RPAREN {: RESULT=new StatementDerived3(E1); RESULT.setLine(E1left); :}
-		  	|   PRINT LPAREN Expr:E1 COMMA NUMBER RPAREN SEMI {: RESULT=new StatementDerived4(E1); RESULT.setLine(E1left); :}
-		  	| {: RESULT=new StatementDerived5(); :}   /* epsilon */
+GlobalDeclList ::= (GlobalDeclListProduction) GlobalDeclList:G1 GlobalDecl:G2 {: RESULT=new GlobalDeclListProduction(G1, G2); RESULT.setLine(G1left); :}
+				| {: RESULT=new GlobalDeclListDerived1(); :} /* epsilon */
+				;
+
+GlobalDecl ::= (GVarDeclList) GlobalVarDecl:G1 {: RESULT=new GVarDeclList(G1); RESULT.setLine(G1left); :}
+			|  (GEnumDeclList) EnumDecl:E1 {: RESULT=new GEnumDeclList(E1); RESULT.setLine(E1left); :}
+			|  (GConstDeclList) ConstDecl:C1 {: RESULT=new GConstDeclList(C1); RESULT.setLine(C1left); :}
+			;
+
+GlobalVarDecl  ::=  (GArrayVarDecl) ArrayDecl:A1 {: RESULT=new GArrayVarDecl(A1); RESULT.setLine(A1left); :} 
+				|   (GSimpleVarDecl) Type:T1 IDENT:I2 SEMI {: RESULT=new GSimpleVarDecl(T1, I2); RESULT.setLine(T1left); :}
+				;
+
+VarDeclList ::= (VarDeclListProduction) VarDeclList:V1 VarDecl:V2 {: RESULT=new VarDeclListProduction(V1, V2); RESULT.setLine(V1left); :}
+			| {: RESULT=new VarDeclListDerived1(); :} /* epsilon */
+			;
+
+VarDecl  ::= (ArrayVarDecl) ArrayDecl:A1 {: RESULT=new ArrayVarDecl(A1); RESULT.setLine(A1left); :} 
+		 |   (SimpleVarDecl) Type:T1 IDENT:I2 SEMI {: RESULT=new SimpleVarDecl(T1, I2); RESULT.setLine(T1left); :}
+		 ;
+
+MethDeclList ::= (MethDeclListProduction) MethDeclList:M1 MethDecl:M2 {: RESULT=new MethDeclListProduction(M1, M2); RESULT.setLine(M1left); :}
+            | {: RESULT=new MethDeclListDerived1(); :}   /* epsilon */
+			;
+
+OptionalReturn ::=  (OptionalReturnProduction) RETURN Expr:E1 SEMI {: RESULT=new OptionalReturnProduction(E1); RESULT.setLine(E1left); :}
+				| {: RESULT=new OptionalReturnDerived1(); :}  /* epsilon */
+				;
+				
+Parameter ::= (ParameterVarProduction) Type:T1 IDENT:I2 {: RESULT=new ParameterVarProduction(T1, I2); RESULT.setLine(T1left); :}
+			| (ParameterArrayProduction) MyArray:M1 {: RESULT=new ParameterArrayProduction(M1); RESULT.setLine(M1left); :}
+			;
+				
+ParameterList ::= (MultipleParameterListProduction) Parameter:P1 COMMA ParameterList:P2 {: RESULT=new MultipleParameterListProduction(P1, P2); RESULT.setLine(P1left); :}
+			  |   (SingleParameterListProduction) Parameter:P1 {: RESULT=new SingleParameterListProduction(P1); RESULT.setLine(P1left); :}
+			  | {: RESULT=new ParameterListDerived1(); :}   /* epsilon */
+			  ;
+				
+MethDecl ::= (MethDeclProduction) Type:T1 IDENT:I2 LPAREN ParameterList:P3 RPAREN VarDeclList:V4 LBRACE StatementList:S5 OptionalReturn:O6 RBRACE {: RESULT=new MethDeclProduction(T1, I2, P3, V4, S5, O6); RESULT.setLine(T1left); :} ;
+
+ArrayDecl ::= (ArrayDeclProduction) Type:T1 IDENT:I2 LBRACKET RBRACKET SEMI {: RESULT=new ArrayDeclProduction(T1, I2); RESULT.setLine(T1left); :};
+
+ConstExpr ::= (ConstExprProduction) IDENT:I1 EQUAL NUMBER:N2 {: RESULT=new ConstExprProduction(I1, N2); RESULT.setLine(I1left); :};
+
+ConstInitializationList ::= (MultipleConstExpr) ConstExpr:C1 COMMA ConstInitializationList:C2 {: RESULT=new MultipleConstExpr(C1, C2); RESULT.setLine(C1left); :}
+						|   (SingleConstExpr) ConstExpr:C1 {: RESULT=new SingleConstExpr(C1); RESULT.setLine(C1left); :}
+						;						
+
+ConstDecl ::= (ConstDeclProduction) CONST Type:T1 ConstInitializationList:C2 SEMI {: RESULT=new ConstDeclProduction(T1, C2); RESULT.setLine(T1left); :};
+
+EnumInst ::= (EnumInstProduction) EQUAL NUMBER:N1 {: RESULT=new EnumInstProduction(N1); RESULT.setLine(N1left); :}
+			| {: RESULT=new EnumInstDerived1(); :}  /* epsilon */
+			;
+
+EnumExpr ::= (EnumExprProduction) IDENT:I1 EnumInst:E2 {: RESULT=new EnumExprProduction(I1, E2); RESULT.setLine(I1left); :};
+
+EnumExprList ::= (MultipleEnumExpr) EnumExpr:E1 COMMA EnumExprList:E2 {: RESULT=new MultipleEnumExpr(E1, E2); RESULT.setLine(E1left); :} 
+			 | (SingleEnumExpr) EnumExpr:E1 {: RESULT=new SingleEnumExpr(E1); RESULT.setLine(E1left); :}
+			 ;
+			 
+EnumDecl ::= (EnumDeclProduction) ENUM IDENT:I1 LBRACE EnumExprList:E2 RBRACE {: RESULT=new EnumDeclProduction(I1, E2); RESULT.setLine(I1left); :};
+
+StatementList ::= (StatementListProduction) StatementList:S1 Statement:S2 {: RESULT=new StatementListProduction(S1, S2); RESULT.setLine(S1left); :}
+				| {: RESULT=new StatementListDerived1(); :}  /* epsilon */
+				;
+PrintParam ::= (PrintParamProduction) COMMA NUMBER:N1 {: RESULT=new PrintParamProduction(N1); RESULT.setLine(N1left); :}
+			| {: RESULT=new PrintParamDerived1(); :}   /* epsilon */
+			;
+PrintStmt ::=  (PrintStmtProduction) PRINT LPAREN Expr:E1 PrintParam:P2 RPAREN {: RESULT=new PrintStmtProduction(E1, P2); RESULT.setLine(E1left); :} 
+			;
+
+Statement ::=	(DesigStatement) DesignatorStatement:D1 SEMI {: RESULT=new DesigStatement(D1); RESULT.setLine(D1left); :}
+		  	|   (ReadCall) READ LPAREN Designator:D1 RPAREN SEMI {: RESULT=new ReadCall(D1); RESULT.setLine(D1left); :}
+		  	|	(PrintCall) PrintStmt:P1 SEMI {: RESULT=new PrintCall(P1); RESULT.setLine(P1left); :}
+		  	|   (MethCall) FuncCall:F1 SEMI {: RESULT=new MethCall(F1); RESULT.setLine(F1left); :}
 		    ;
+		    
+FuncCall  ::=  (FuncCallProduction)  IDENT:I1 LPAREN RPAREN {: RESULT=new FuncCallProduction(I1); RESULT.setLine(I1left); :};
 
-DesignatorStatement ::=   Designator:D1 EQUAL Expr:E2 {: RESULT=new DesignatorStatementDerived1(D1, E2); RESULT.setLine(D1left); :}
-					  |	  Designator:D1 INC {: RESULT=new DesignatorStatementDerived2(D1); RESULT.setLine(D1left); :}
-					  |	  Designator:D1 DEC {: RESULT=new DesignatorStatementDerived3(D1); RESULT.setLine(D1left); :}
+DesignatorStatement ::=  (DesStatAssignment) Designator:D1 EQUAL Expr:E2 {: RESULT=new DesStatAssignment(D1, E2); RESULT.setLine(D1left); :}
+					  |	 (DesStatInc) Designator:D1 INC {: RESULT=new DesStatInc(D1); RESULT.setLine(D1left); :}
+					  |	 (DesStatDec) Designator:D1 DEC {: RESULT=new DesStatDec(D1); RESULT.setLine(D1left); :}
 					  ;
-SignedExpr ::= 	MINUS Term:T1 {: RESULT=new SignedExprDerived1(T1); RESULT.setLine(T1left); :}
-			| 	Term:T1 {: RESULT=new SignedExprDerived2(T1); RESULT.setLine(T1left); :};
-							 
-Expr ::=   SignedExpr:S1 {: RESULT=new ExprDerived1(S1); RESULT.setLine(S1left); :}
-		|   Addop:A1 Term:T2 {: RESULT=new ExprDerived2(A1, T2); RESULT.setLine(A1left); :};
+
+SignedTerm ::= (MinusTerm) MINUS Term:T1 {: RESULT=new MinusTerm(T1); RESULT.setLine(T1left); :}
+			|  (PlusTerm) Term:T1 {: RESULT=new PlusTerm(T1); RESULT.setLine(T1left); :}
+			;							 
+Expr ::=(AddopExpr) SignedTerm:S1 Addop:A2 Term:T3 {: RESULT=new AddopExpr(S1, A2, T3); RESULT.setLine(S1left); :}
+	 |  (TermExpr) SignedTerm:S1 {: RESULT=new TermExpr(S1); RESULT.setLine(S1left); :}
+	 ;
+
+Term ::=  (MulopTerm) Factor:F1 Mulop:M2 Factor:F3 {: RESULT=new MulopTerm(F1, M2, F3); RESULT.setLine(F1left); :}
+	 |  (FactorTerm) Factor:F1 {: RESULT=new FactorTerm(F1); RESULT.setLine(F1left); :}
+	 ;
+
+Type ::=  (TypeProduction) IDENT:I1 {: RESULT=new TypeProduction(I1); RESULT.setLine(I1left); :};
+
+InstPrimitive ::= (InstPrimitiveProduction) NEW Type:T1 {: RESULT=new InstPrimitiveProduction(T1); RESULT.setLine(T1left); :};
+
+InstArray  	  ::= (InstArrayProduction) InstPrimitive:I1 LBRACKET Expr:E2 RBRACKET {: RESULT=new InstArrayProduction(I1, E2); RESULT.setLine(I1left); :};
+
+Instantiation ::= (InstPrimit) InstPrimitive:I1 {: RESULT=new InstPrimit(I1); RESULT.setLine(I1left); :}
+			    | (InstArr) InstArray:I1 {: RESULT=new InstArr(I1); RESULT.setLine(I1left); :};
 		
-Term ::=   Factor:F1 {: RESULT=new TermDerived1(F1); RESULT.setLine(F1left); :} 
-		|  Mulop:M1 Factor:F2 {: RESULT=new TermDerived2(M1, F2); RESULT.setLine(M1left); :};
-
-Type ::=   IDENT {: RESULT=new TypeDerived1(); :};
-
-InstPrimitive ::= NEW Type:T1 {: RESULT=new InstPrimitiveDerived1(T1); RESULT.setLine(T1left); :};
-
-InstArray  	  ::= InstPrimitive:I1 LBRACKET Expr:E2 RBRACKET {: RESULT=new InstArrayDerived1(I1, E2); RESULT.setLine(I1left); :};
-
-Instantiation ::= InstPrimitive:I1 {: RESULT=new InstantiationDerived1(I1); RESULT.setLine(I1left); :}
-			    | InstArray:I1 {: RESULT=new InstantiationDerived2(I1); RESULT.setLine(I1left); :};
-		
-Factor ::= NUMBER {: RESULT=new FactorDerived1(); :}
-		 | STRING {: RESULT=new FactorDerived2(); :}
-		 | LPAREN Expr:E1 RPAREN {: RESULT=new FactorDerived3(E1); RESULT.setLine(E1left); :}
-		 | BOOL {: RESULT=new FactorDerived4(); :}
-		 | Instantiation:I1 {: RESULT=new FactorDerived5(I1); RESULT.setLine(I1left); :}
+Factor ::= (IdentFactor) IDENT:I1 {: RESULT=new IdentFactor(I1); RESULT.setLine(I1left); :}
+		 | (NumberFactor) NUMBER:N1 {: RESULT=new NumberFactor(N1); RESULT.setLine(N1left); :}
+		 | (StringFactor) STRING {: RESULT=new StringFactor(); :}
+		 | (GroupFactor) LPAREN Expr:E1 RPAREN {: RESULT=new GroupFactor(E1); RESULT.setLine(E1left); :}
+		 | (BoolFactor) BOOL {: RESULT=new BoolFactor(); :}
+		 | (InstFactor) Instantiation:I1 {: RESULT=new InstFactor(I1); RESULT.setLine(I1left); :}
+		 | (ArrayFactor) MyArray:M1 {: RESULT=new ArrayFactor(M1); RESULT.setLine(M1left); :}
+		 | (EnumUseFactor) EnumUse:E1 {: RESULT=new EnumUseFactor(E1); RESULT.setLine(E1left); :}
 		 ;
 		
-Array  ::= IDENT LBRACKET Expr:E1 RBRACKET {: RESULT=new ArrayDerived1(E1); RESULT.setLine(E1left); :};		
+MyArray  ::= (MyArrayProduction) IDENT:I1 LBRACKET Expr:E2 RBRACKET {: RESULT=new MyArrayProduction(I1, E2); RESULT.setLine(I1left); :};		
 
-Enum   ::= IDENT DOT IDENT {: RESULT=new EnumDerived1(); :};
+EnumUse   ::= (EnumUseProduction) IDENT:I1 DOT IDENT:I2 {: RESULT=new EnumUseProduction(I1, I2); RESULT.setLine(I1left); :};
 		
-Designator	::=	IDENT {: RESULT=new DesignatorDerived1(); :}
-			|	Enum:E1 {: RESULT=new DesignatorDerived2(E1); RESULT.setLine(E1left); :}
-			|   Array:A1 {: RESULT=new DesignatorDerived3(A1); RESULT.setLine(A1left); :}
+Designator	::=	(IdentDesignator) IDENT:I1 {: RESULT=new IdentDesignator(I1); RESULT.setLine(I1left); :}
+			|	(EnumUseDesignator) EnumUse:E1 {: RESULT=new EnumUseDesignator(E1); RESULT.setLine(E1left); :}
+			|   (MyArrayDesignator) MyArray:M1 {: RESULT=new MyArrayDesignator(M1); RESULT.setLine(M1left); :}
 			;
 		
-Addop  ::= PLUS {: RESULT=new AddopDerived1(); :} 
-		|  MINUS {: RESULT=new AddopDerived2(); :}
+Addop  ::= (PlusAddop) PLUS {: RESULT=new PlusAddop(); :} 
+		|  (MinusAddop) MINUS {: RESULT=new MinusAddop(); :}
 		;
 
-Mulop  ::= MUL {: RESULT=new MulopDerived1(); :}
-		|  DIV {: RESULT=new MulopDerived2(); :}
-		|  MOD {: RESULT=new MulopDerived3(); :}
+Mulop  ::= (MulMulop) MUL {: RESULT=new MulMulop(); :}
+		|  (DivMulop) DIV {: RESULT=new DivMulop(); :}
+		|  (ModMulop) MOD {: RESULT=new ModMulop(); :}
 		;
 			

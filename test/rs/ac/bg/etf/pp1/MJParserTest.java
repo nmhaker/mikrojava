@@ -43,8 +43,6 @@ public class MJParserTest {
 			SemanticPass v = new SemanticPass();
 			prog.traverseBottomUp(v);
 			
-			log.info("Print count calls = " + v.printCallCount);
-			log.info("Declared variables number = " + v.varDeclCount);
 			
 			log.info("====================");
 			Tab.dump();

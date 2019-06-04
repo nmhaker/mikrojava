@@ -46,106 +46,159 @@ scan with {:
 	return s;
 :}
 
-terminal PROG, ENUM, CONST, PRINT, READ, RETURN, VOID, NEW;
+terminal PROG, ENUM, CONST, PRINT, READ, RETURN, NEW;
 terminal PLUS, MINUS, MUL, DIV, MOD, INC ,DEC, EQUAL;
 terminal DOT, SEMI, COMMA, LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET;
-terminal COMMENT, BOOL, NUMBER, IDENT, STRING;
+terminal COMMENT, BOOL, STRING;
+terminal String IDENT;
+terminal Integer NUMBER;
 
 nonterminal Statement, StatementList, DesignatorStatement, Designator;
-nonterminal SignedExpr, Expr, Term, Factor, Instantiation;
+nonterminal SignedTerm, Expr, Term, Factor, Instantiation;
 nonterminal Addop, Mulop;
-nonterminal Type, Array, Enum;
+nonterminal Type, MyArray, EnumUse;
 nonterminal ProgName, Program;
 nonterminal InstPrimitive, InstArray;
-nonterminal VarDeclList, MethDeclList, VarDecl, MethDecl, ArrayDecl, EnumDecl, EnumExpr, EnumExprList;
+nonterminal VarDeclList, MethDeclList, VarDecl, MethDecl, ArrayDecl, EnumDecl, EnumExpr, EnumExprList, EnumInst;
+nonterminal PrintStmt, PrintParam;
+nonterminal OptionalReturn, FuncCall;
+nonterminal ConstExpr, ConstInitializationList, ConstDecl;
+nonterminal GlobalDeclList, GlobalDecl,  GlobalVarDecl;
+nonterminal OptionalParameterList, ParameterList, Parameter;
 
-Program   ::= PROG ProgName VarDeclList LBRACE MethDeclList RBRACE;
+Program   ::= (ProgramProduction) PROG ProgName GlobalDeclList LBRACE MethDeclList RBRACE;
 
-ProgName ::= IDENT;
+ProgName ::= (ProgNameProduction) IDENT;
 
-VarDeclList ::= VarDeclList VarDecl
-			|   VarDecl;
+GlobalDeclList ::= (GlobalDeclListProduction) GlobalDeclList GlobalDecl
+				| /* epsilon */
+				;
 
-MethDeclList ::= MethDeclList MethDecl
-			|   MethDecl;
-
-ArrayDecl ::= Type IDENT LBRACKET NUMBER RBRACKET SEMI;
-
-EnumExpr  ::= IDENT
-			| IDENT EQUAL NUMBER 
+GlobalDecl ::= (GVarDeclList) GlobalVarDecl
+			|  (GEnumDeclList) EnumDecl
+			|  (GConstDeclList) ConstDecl
 			;
-			
-EnumExprList ::= EnumExprList COMMA EnumExpr
-			 |	 EnumExpr
-			 |	/* epsilon */
+
+GlobalVarDecl  ::=  (GArrayVarDecl) ArrayDecl 
+				|   (GSimpleVarDecl) Type IDENT SEMI
+				;
+
+VarDeclList ::= (VarDeclListProduction) VarDeclList VarDecl
+			| /* epsilon */
+			;
+
+VarDecl  ::= (ArrayVarDecl) ArrayDecl 
+		 |   (SimpleVarDecl) Type IDENT SEMI
+		 ;
+
+MethDeclList ::= (MethDeclListProduction) MethDeclList MethDecl
+            |   /* epsilon */
+			;
+
+OptionalReturn ::=  (OptionalReturnProduction) RETURN Expr SEMI
+				|  /* epsilon */
+				;
+				
+Parameter ::= (ParameterVarProduction) Type IDENT
+			| (ParameterArrayProduction) MyArray
+			;
+				
+ParameterList ::= (MultipleParameterListProduction) Parameter COMMA ParameterList
+			  |   (SingleParameterListProduction) Parameter
+			  |   /* epsilon */
+			  ;
+				
+MethDecl ::= (MethDeclProduction) Type IDENT LPAREN ParameterList RPAREN VarDeclList LBRACE StatementList OptionalReturn RBRACE ;
+
+ArrayDecl ::= (ArrayDeclProduction) Type IDENT LBRACKET RBRACKET SEMI;
+
+ConstExpr ::= (ConstExprProduction) IDENT EQUAL NUMBER;
+
+ConstInitializationList ::= (MultipleConstExpr) ConstExpr COMMA ConstInitializationList
+						|   (SingleConstExpr) ConstExpr
+						;						
+
+ConstDecl ::= (ConstDeclProduction) CONST Type ConstInitializationList SEMI;
+
+EnumInst ::= (EnumInstProduction) EQUAL NUMBER
+			|  /* epsilon */
+			;
+
+EnumExpr ::= (EnumExprProduction) IDENT EnumInst;
+
+EnumExprList ::= (MultipleEnumExpr) EnumExpr COMMA EnumExprList 
+			 | (SingleEnumExpr) EnumExpr
 			 ;
 			 
-EnumDecl ::= ENUM IDENT LBRACE EnumExprList RBRACE;
+EnumDecl ::= (EnumDeclProduction) ENUM IDENT LBRACE EnumExprList RBRACE;
 
-VarDecl  ::= ArrayDecl
-		 |   EnumDecl
-		 |   Type IDENT SEMI
-		 |   /* epsilon */
-		 ;
+StatementList ::= (StatementListProduction) StatementList Statement
+				|  /* epsilon */
+				;
+PrintParam ::= (PrintParamProduction) COMMA NUMBER
+			|   /* epsilon */
+			;
+PrintStmt ::=  (PrintStmtProduction) PRINT LPAREN Expr PrintParam RPAREN 
+			;
 
-MethDecl ::= Type IDENT LPAREN RPAREN VarDeclList LBRACE StatementList RBRACE
-         |   /* epsilon */
-         ;
-
-StatementList ::= StatementList Statement
-				| Statement;
-
-Statement ::=	DesignatorStatement SEMI
-		  	|   READ LPAREN Designator RPAREN SEMI
-		  	|   PRINT LPAREN Expr RPAREN
-		  	|   PRINT LPAREN Expr COMMA NUMBER RPAREN SEMI
-		  	|   /* epsilon */
+Statement ::=	(DesigStatement) DesignatorStatement SEMI
+		  	|   (ReadCall) READ LPAREN Designator RPAREN SEMI
+		  	|	(PrintCall) PrintStmt SEMI
+		  	|   (MethCall) FuncCall SEMI
 		    ;
+		    
+FuncCall  ::=  (FuncCallProduction)  IDENT LPAREN RPAREN;
 
-DesignatorStatement ::=   Designator EQUAL Expr
-					  |	  Designator INC
-					  |	  Designator DEC
+DesignatorStatement ::=  (DesStatAssignment) Designator EQUAL Expr
+					  |	 (DesStatInc) Designator INC
+					  |	 (DesStatDec) Designator DEC
 					  ;
-							 
-Expr ::= MINUS Term Addop Term
-	 |   MINUS Term
+
+SignedTerm ::= (MinusTerm) MINUS Term
+			|  (PlusTerm) Term
+			;							 
+Expr ::=(AddopExpr) SignedTerm Addop Term
+	 |  (TermExpr) SignedTerm
 	 ;
 
-Term ::=   Factor Mulop Factor
-	 |  Factor
+Term ::=  (MulopTerm) Factor Mulop Factor
+	 |  (FactorTerm) Factor
 	 ;
 
-Type ::=   IDENT;
+Type ::=  (TypeProduction) IDENT;
 
-InstPrimitive ::= NEW Type;
+InstPrimitive ::= (InstPrimitiveProduction) NEW Type;
 
-InstArray  	  ::= InstPrimitive LBRACKET Expr RBRACKET;
+InstArray  	  ::= (InstArrayProduction) InstPrimitive LBRACKET Expr RBRACKET;
 
-Instantiation ::= InstPrimitive
-			    | InstArray;
+Instantiation ::= (InstPrimit) InstPrimitive
+			    | (InstArr) InstArray;
 		
-Factor ::= NUMBER
-		 | STRING
-		 | LPAREN Expr RPAREN
-		 | BOOL
-		 | Instantiation
+Factor ::= (IdentFactor) IDENT
+		 | (NumberFactor) NUMBER
+		 | (StringFactor) STRING
+		 | (GroupFactor) LPAREN Expr RPAREN
+		 | (BoolFactor) BOOL
+		 | (InstFactor) Instantiation
+		 | (ArrayFactor) MyArray
+		 | (EnumUseFactor) EnumUse
 		 ;
 		
-Array  ::= IDENT LBRACKET Expr RBRACKET;		
+MyArray  ::= (MyArrayProduction) IDENT LBRACKET Expr RBRACKET;		
 
-Enum   ::= IDENT DOT IDENT;
+EnumUse   ::= (EnumUseProduction) IDENT DOT IDENT;
 		
-Designator	::=	IDENT
-			|	Enum
-			|   Array
+Designator	::=	(IdentDesignator) IDENT
+			|	(EnumUseDesignator) EnumUse
+			|   (MyArrayDesignator) MyArray
 			;
 		
-Addop  ::= PLUS 
-		|  MINUS
+Addop  ::= (PlusAddop) PLUS 
+		|  (MinusAddop) MINUS
 		;
 
-Mulop  ::= MUL
-		|  DIV
-		|  MOD
+Mulop  ::= (MulMulop) MUL
+		|  (DivMulop) DIV
+		|  (ModMulop) MOD
 		;
 			

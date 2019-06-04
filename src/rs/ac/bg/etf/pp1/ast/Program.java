@@ -1,9 +1,9 @@
 // generated with ast extension for cup
 // version 0.8
-// 3/5/2019 20:23:31
+// 4/5/2019 16:7:44
 
 
-package src.rs.ac.bg.etf.pp1.ast;
+package rs.ac.bg.etf.pp1.ast;
 
 public abstract class Program implements SyntaxNode {
 
