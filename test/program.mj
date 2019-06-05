@@ -10,7 +10,7 @@ program MJProgram
 {
 
 	int k() int c; {
-		c = *;
+		c = 6;
 		return c + 2;
 	}
 	

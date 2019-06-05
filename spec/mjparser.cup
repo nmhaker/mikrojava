@@ -56,8 +56,8 @@ terminal Integer NUMBER;
 nonterminal Statement, StatementList, DesignatorStatement, Designator;
 nonterminal SignedTerm, Expr, Term, Factor, Instantiation;
 nonterminal Addop, Mulop;
-nonterminal Type, MyArray, EnumUse;
-nonterminal ProgName, Program;
+nonterminal MyArray, EnumUse;
+nonterminal Program;
 nonterminal InstPrimitive, InstArray;
 nonterminal VarDeclList, MethDeclList, VarDecl, MultipleVarDecl, MultipleVarDeclExpr, MethDecl, ArrayDecl, EnumDecl, EnumExpr, EnumExprList, EnumInst;
 nonterminal PrintStmt, PrintParam;
@@ -66,12 +66,15 @@ nonterminal ConstExpr, ConstInitializationList, ConstDecl;
 nonterminal GlobalDeclList, GlobalDecl,  GlobalVarDecl;
 nonterminal OptionalParameterList, ParameterList, Parameter;
 
-Program   ::= (ProgramProduction) PROG ProgName GlobalDeclList LBRACE MethDeclList RBRACE;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName;
 
-ProgName ::= (ProgNameProduction) IDENT;
+Program   ::= (Program) PROG ProgName:progName GlobalDeclList LBRACE MethDeclList RBRACE;
+
+ProgName ::= (ProgName) IDENT:progName;
 
 GlobalDeclList ::= (GlobalDeclListProduction) GlobalDeclList GlobalDecl
-				| /* epsilon */
+				|  /* epsilon */
 				;
 
 GlobalDecl ::= (GVarDeclList) GlobalVarDecl
@@ -88,7 +91,7 @@ VarDeclList ::= (VarDeclListProduction) VarDeclList VarDecl
 			| /* epsilon */
 			;
 			
-MultipleVarDeclExpr ::= (SimpleVarDecl) IDENT
+MultipleVarDeclExpr ::= (SimpleVarDecl) IDENT:varName
 					|   (SimpleArrayDecl) ArrayDecl
 					;
 					 			
@@ -96,7 +99,7 @@ MultipleVarDecl ::= (MultipleVarDeclProduction) MultipleVarDeclExpr COMMA Multip
 				| 	(SingleVarDeclProduction) MultipleVarDeclExpr
 				; 
 
-VarDecl  ::= (MultipleVariableDecl) Type MultipleVarDecl SEMI
+VarDecl  ::= (MultipleVariableDecl) Type:varType MultipleVarDecl SEMI
 		 ;
 
 MethDeclList ::= (MethDeclListProduction) MethDeclList MethDecl
@@ -174,7 +177,7 @@ Term ::=  (MulopTerm) Factor Mulop Factor
 	 |  (FactorTerm) Factor
 	 ;
 
-Type ::=  (TypeProduction) IDENT;
+Type ::=  (TypeProduction) IDENT:typeName;
 
 InstPrimitive ::= (InstPrimitiveProduction) NEW Type;
 

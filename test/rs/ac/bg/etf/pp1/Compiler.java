@@ -41,7 +41,7 @@ public class Compiler {
 				log.info(prog.toString(""));
 				log.info("====================");
 				
-				SemanticPass v = new SemanticPass();
+				SemanticAnalyzer v = new SemanticAnalyzer();
 				prog.traverseBottomUp(v);
 				
 				
@@ -79,7 +79,7 @@ public class Compiler {
 			log.info(prog.toString(""));
 			log.info("====================");
 			
-			SemanticPass v = new SemanticPass();
+			SemanticAnalyzer v = new SemanticAnalyzer();
 			prog.traverseBottomUp(v);
 			
 			
@@ -116,7 +116,7 @@ public class Compiler {
 			log.info(prog.toString(""));
 			log.info("====================");
 			
-			SemanticPass v = new SemanticPass();
+			SemanticAnalyzer v = new SemanticAnalyzer();
 			prog.traverseBottomUp(v);
 			
 			
