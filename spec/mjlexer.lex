@@ -63,5 +63,5 @@ import java_cup.runtime.*;
 [0-9]+	{ return new_symbol(sym.NUMBER, Integer.valueOf(yytext())); }
 ([a-z]|[A-Z])[a-z|A-Z|0-9|_]* 	{ return new_symbol (sym.IDENT, yytext()); }
 \"([a-z]|[A-Z])[a-z|A-Z|0-9|_]*\"  { return new_symbol(sym.STRING, yytext()); }
-. { System.err.println("Leksicka greska ("+yytext()+") u liniji "+(yyline+1)); }
+. { System.err.println("Leksicka greska ("+yytext()+") na liniji "+(yyline+1) + ", na poziciji " + yycolumn); }
 

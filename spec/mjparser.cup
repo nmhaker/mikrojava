@@ -17,7 +17,7 @@ parser code {:
 	}
 	
 	public void syntax_error(Symbol cur_token){
-		report_error("\nSuntaksna greska", cur_token);	
+		report_error("\nSintaksna greska", cur_token);	
 	}
 	
 	public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
@@ -59,7 +59,7 @@ nonterminal Addop, Mulop;
 nonterminal Type, MyArray, EnumUse;
 nonterminal ProgName, Program;
 nonterminal InstPrimitive, InstArray;
-nonterminal VarDeclList, MethDeclList, VarDecl, MethDecl, ArrayDecl, EnumDecl, EnumExpr, EnumExprList, EnumInst;
+nonterminal VarDeclList, MethDeclList, VarDecl, MultipleVarDecl, MultipleVarDeclExpr, MethDecl, ArrayDecl, EnumDecl, EnumExpr, EnumExprList, EnumInst;
 nonterminal PrintStmt, PrintParam;
 nonterminal OptionalReturn, FuncCall;
 nonterminal ConstExpr, ConstInitializationList, ConstDecl;
@@ -79,16 +79,24 @@ GlobalDecl ::= (GVarDeclList) GlobalVarDecl
 			|  (GConstDeclList) ConstDecl
 			;
 
-GlobalVarDecl  ::=  (GArrayVarDecl) ArrayDecl 
-				|   (GSimpleVarDecl) Type IDENT SEMI
+GlobalVarDecl  ::=  (GVarDecl) VarDecl
+				| 	(GlobalVarDeclErrorComma) error COMMA:l {: parser.report_error("Izvrsen oporavak do prvog ',' na liniji" + lleft, null); :} 
+				|   (GlobalVarDeclErrorSemi) error SEMI:l {: parser.report_error("Izvrsen oporavak do prve ';' na liniji" + lleft, null); :} 
 				;
 
 VarDeclList ::= (VarDeclListProduction) VarDeclList VarDecl
 			| /* epsilon */
 			;
+			
+MultipleVarDeclExpr ::= (SimpleVarDecl) IDENT
+					|   (SimpleArrayDecl) ArrayDecl
+					;
+					 			
+MultipleVarDecl ::= (MultipleVarDeclProduction) MultipleVarDeclExpr COMMA MultipleVarDecl
+				| 	(SingleVarDeclProduction) MultipleVarDeclExpr
+				; 
 
-VarDecl  ::= (ArrayVarDecl) ArrayDecl 
-		 |   (SimpleVarDecl) Type IDENT SEMI
+VarDecl  ::= (MultipleVariableDecl) Type MultipleVarDecl SEMI
 		 ;
 
 MethDeclList ::= (MethDeclListProduction) MethDeclList MethDecl
@@ -110,7 +118,7 @@ ParameterList ::= (MultipleParameterListProduction) Parameter COMMA ParameterLis
 				
 MethDecl ::= (MethDeclProduction) Type IDENT LPAREN ParameterList RPAREN VarDeclList LBRACE StatementList OptionalReturn RBRACE ;
 
-ArrayDecl ::= (ArrayDeclProduction) Type IDENT LBRACKET RBRACKET SEMI;
+ArrayDecl ::= (ArrayDeclProduction) IDENT LBRACKET RBRACKET ;
 
 ConstExpr ::= (ConstExprProduction) IDENT EQUAL NUMBER;
 
@@ -150,6 +158,7 @@ Statement ::=	(DesigStatement) DesignatorStatement SEMI
 FuncCall  ::=  (FuncCallProduction)  IDENT LPAREN RPAREN;
 
 DesignatorStatement ::=  (DesStatAssignment) Designator EQUAL Expr
+					  |  (DesStatAssignmentError) error:l {: parser.report_error("Izvrsen oporavak do prve ';' na liniji: " + lleft , null); :}
 					  |	 (DesStatInc) Designator INC
 					  |	 (DesStatDec) Designator DEC
 					  ;
