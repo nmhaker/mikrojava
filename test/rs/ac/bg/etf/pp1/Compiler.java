@@ -20,16 +20,55 @@ public class Compiler {
 		Log4JUtils.instance().prepareLogFile(Logger.getRootLogger());
 	}
 	
-	public static void main(String[] args) throws Exception {
-		Logger log = Logger.getLogger(Compiler.class);
-		
-		Reader br = null;
-		
-		try {
-			File sourceCode = new File("test/program.mj");
-			log.info("Compiling source file: "+sourceCode.getAbsolutePath());
+	public static void testirajSintaksnuAnalizu(Logger log, Reader br) throws Exception {
+
+			final int numOfFiles = 1;
+			File sourceCode[] = new File[numOfFiles];
+			sourceCode[0] = new File("test/TestiranjeSintaksneAnaliza/Test1.mj");
 			
-			br = new BufferedReader(new FileReader(sourceCode));
+			int i = 0;
+			while(i < numOfFiles) {
+				log.info("Compiling source file: "+sourceCode[i].getAbsolutePath());
+				
+				br = new BufferedReader(new FileReader(sourceCode[i]));
+				Yylex lexer = new Yylex(br);
+				
+				MJParser p = new MJParser(lexer);
+				Symbol s = p.parse();
+				
+				Program prog = (Program)(s.value);
+				Tab.init();
+				log.info(prog.toString(""));
+				log.info("====================");
+				
+				SemanticPass v = new SemanticPass();
+				prog.traverseBottomUp(v);
+				
+				
+				log.info("====================");
+				Tab.dump();
+				
+				if(!p.errorDetected && v.passed()) {
+					log.info("Parsiranje uspesno zavrseno!");
+				}else {
+					log.error("Parsiranje nije uspesno zavrseno!");
+				}
+				
+				i++;
+			}
+	}
+	
+	public static void testirajSemantickuAnalizu(Logger log, Reader br) throws Exception {
+
+		final int numOfFiles = 1;
+		File sourceCode[] = new File[numOfFiles];
+		sourceCode[0] = new File("test/TestiranjeSemantickeAnalize/Test1.mj");
+		
+		int i = 0;
+		while(i < numOfFiles) {
+			log.info("Compiling source file: "+sourceCode[i].getAbsolutePath());
+			
+			br = new BufferedReader(new FileReader(sourceCode[i]));
 			Yylex lexer = new Yylex(br);
 			
 			MJParser p = new MJParser(lexer);
@@ -52,6 +91,58 @@ public class Compiler {
 			}else {
 				log.error("Parsiranje nije uspesno zavrseno!");
 			}
+			
+			i++;
+		}
+	}
+	
+	public static void testiraj(Logger log, Reader br) throws Exception {
+
+		final int numOfFiles = 1;
+		File sourceCode[] = new File[numOfFiles];
+		sourceCode[0] = new File("test/program.mj");
+		int i = 0;
+		while(i < numOfFiles) {
+			log.info("Compiling source file: "+sourceCode[i].getAbsolutePath());
+			
+			br = new BufferedReader(new FileReader(sourceCode[i]));
+			Yylex lexer = new Yylex(br);
+			
+			MJParser p = new MJParser(lexer);
+			Symbol s = p.parse();
+			
+			Program prog = (Program)(s.value);
+			Tab.init();
+			log.info(prog.toString(""));
+			log.info("====================");
+			
+			SemanticPass v = new SemanticPass();
+			prog.traverseBottomUp(v);
+			
+			
+			log.info("====================");
+			Tab.dump();
+			
+			if(!p.errorDetected && v.passed()) {
+				log.info("Parsiranje uspesno zavrseno!");
+			}else {
+				log.error("Parsiranje nije uspesno zavrseno!");
+			}
+			
+			i++;
+		}
+}
+	
+	public static void main(String[] args) throws Exception {
+		Logger log = Logger.getLogger(Compiler.class);
+		
+		Reader br = null;
+		
+		try {
+	
+			//testirajSintaksnuAnalizu(log, br);
+			//testirajSemantickuAnalizu(log, br);
+			testiraj(log, br);
 
 		}finally {
 			if(br != null) try {br.close(); } catch (IOException e1) {log.error(e1.getMessage(), e1); }

@@ -80,8 +80,8 @@ GlobalDecl ::= (GVarDeclList) GlobalVarDecl
 			;
 
 GlobalVarDecl  ::=  (GVarDecl) VarDecl
-				| 	(GlobalVarDeclErrorComma) error COMMA:l {: parser.report_error("Izvrsen oporavak do prvog ',' na liniji" + lleft, null); :} 
-				|   (GlobalVarDeclErrorSemi) error SEMI:l {: parser.report_error("Izvrsen oporavak do prve ';' na liniji" + lleft, null); :} 
+				| 	(GlobalVarDeclErrorComma) error COMMA:l {: parser.report_error("Izvrsen oporavak do prvog ',' u deklaraciji promenljive", null); :} 
+				|   (GlobalVarDeclErrorSemi) error SEMI:l {: parser.report_error("Izvrsen oporavak do prve ';' u deklaraciji promneljive", null); :} 
 				;
 
 VarDeclList ::= (VarDeclListProduction) VarDeclList VarDecl
@@ -158,7 +158,7 @@ Statement ::=	(DesigStatement) DesignatorStatement SEMI
 FuncCall  ::=  (FuncCallProduction)  IDENT LPAREN RPAREN;
 
 DesignatorStatement ::=  (DesStatAssignment) Designator EQUAL Expr
-					  |  (DesStatAssignmentError) error:l {: parser.report_error("Izvrsen oporavak do prve ';' na liniji: " + lleft , null); :}
+					  |  (DesStatAssignmentError) error:l {: parser.report_error("Izvrsen oporavak u naredbi dodele do prve ';' " , null); :}
 					  |	 (DesStatInc) Designator INC
 					  |	 (DesStatDec) Designator DEC
 					  ;

@@ -1,0 +1,29 @@
+program MJProgram
+	int x; int y;
+	char a, b;
+	int x, p[], y;
+	const int pi = 3, e = 2;
+	enum Broj { NULA, TRI = 3, PET = 5 }
+	const int pi = 3, e = 2;
+	int xx[];
+	enum Broj { NULA, TRI = 3, PET = 5 }
+{
+
+	int k() int c; {
+		c = *;
+		return c + 2;
+	}
+	
+	int getValue(int a) int b; bool c;{
+		return xx[0] + a;
+	}
+	
+	void main(char idemoo) int i; int x[]; {
+		
+		x = new int[Broj.PET];
+		x = new int[5];
+		
+		read(i);
+		print(x[Broj.NULA]);
+	}
+}
