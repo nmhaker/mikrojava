@@ -2,6 +2,7 @@ program MJProgram
 	int x; int y;
 	char a, b;
 	int x, p[], y;
+	pera a;
 	const int pi = 3, e = 2;
 	enum Broj { NULA, TRI = 3, PET = 5 }
 	const int pi = 3, e = 2;
@@ -9,9 +10,9 @@ program MJProgram
 	enum Broj { NULA, TRI = 3, PET = 5 }
 {
 
-	int k() int c; {
-		c = 6;
-		return c + 2;
+	int k() int c1; {
+		c1 = 6;
+		return c1 + 2;
 	}
 	
 	int getValue(int a) int b; bool c;{

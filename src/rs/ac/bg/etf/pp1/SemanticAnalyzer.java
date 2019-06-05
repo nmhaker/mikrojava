@@ -37,8 +37,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	Struct currentType = null;
 	public void visit(TypeProduction typeProduction) {
 		Obj typeObj = Tab.find(typeProduction.getTypeName());
-		if(typeObj == null) {
-			report_error("Greska ne postoji tip: " + typeProduction.getTypeName(), typeProduction);
+		if(typeObj == Tab.noObj) {
+			if(typeProduction.getTypeName().equals("void")) {
+				
+			}else if(typeProduction.getTypeName().equals("bool")) {
+				
+			}else
+				report_error("Greska ne postoji tip: " + typeProduction.getTypeName(), typeProduction);
 		}else {
 			currentType = typeObj.getType();
 		}
@@ -49,7 +54,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		if(Tab.find(varName) == Tab.noObj) {
 			Tab.insert(Obj.Var, varName, currentType);
 		}else {
-			report_error("Visestruko definisanje simbola: " + varName + " na liniji " + simpleVarDecl.getLine(), simpleVarDecl);
+			report_error("Visestruko definisanje simbola: " + varName, simpleVarDecl);
 		}
 	}
 	
@@ -86,6 +91,5 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
 		report_info("Visited Program", program);
 	}
-	
 	
 }

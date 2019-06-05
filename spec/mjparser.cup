@@ -64,7 +64,8 @@ nonterminal PrintStmt, PrintParam;
 nonterminal OptionalReturn, FuncCall;
 nonterminal ConstExpr, ConstInitializationList, ConstDecl;
 nonterminal GlobalDeclList, GlobalDecl,  GlobalVarDecl;
-nonterminal OptionalParameterList, ParameterList, Parameter;
+nonterminal ParameterList, Parameter;
+nonterminal Comment;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName;
@@ -156,6 +157,7 @@ Statement ::=	(DesigStatement) DesignatorStatement SEMI
 		  	|   (ReadCall) READ LPAREN Designator RPAREN SEMI
 		  	|	(PrintCall) PrintStmt SEMI
 		  	|   (MethCall) FuncCall SEMI
+		  	|   (CommentStatement) Comment
 		    ;
 		    
 FuncCall  ::=  (FuncCallProduction)  IDENT LPAREN RPAREN;
@@ -214,3 +216,4 @@ Mulop  ::= (MulMulop) MUL
 		|  (ModMulop) MOD
 		;
 			
+Comment ::= (Comment) COMMENT;
