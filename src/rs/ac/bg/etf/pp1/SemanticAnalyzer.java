@@ -6,6 +6,8 @@ import rs.ac.bg.etf.pp1.ast.*;
 
 import rs.etf.pp1.symboltable.*;
 import rs.etf.pp1.symboltable.concepts.*;
+import rs.etf.pp1.symboltable.structure.HashTableDataStructure;
+import rs.etf.pp1.symboltable.structure.SymbolDataStructure;
 
 public class SemanticAnalyzer extends VisitorAdaptor {
 
@@ -35,8 +37,24 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	}
 	
 	
+		
+	// Obilazan cvora imena programa
+	// Otvara glavni scope
+	public void visit(ProgName progName) {
+		// Set program object to be available
+		progName.obj = Tab.insert(Obj.Prog, progName.getProgName(), Tab.noType);
+		// Open program scope
+		Tab.openScope();
+
+		report_info("Deklarisano ime programa: " + progName.getProgName(), progName);
+	}
 	
-	
+	// Kada se obidje ova cvor, zavrsio se program
+	public void visit(Program program) {
+		// Chain symbols and close program scope
+		Tab.chainLocalSymbols(program.getProgName().obj);
+		Tab.closeScope();
+	}
 	
 	// Nisu ubacili u tabelu simbola Bool tip...
 	public SemanticAnalyzer() {
@@ -66,9 +84,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		if(Tab.find(varName) == Tab.noObj) {
 			Tab.insert(Obj.Var, varName, currentType);
 			if(!globalVarsDefined) {
-				report_info("Definisana globalna promenljiva: " + currentTypeName + " " + varName, null);
+				report_info("Definisana globalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
 			}else {
-				report_info("Definisana lokalna promenljiva: " + currentTypeName + " " + varName, null);
+				report_info("Definisana lokalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
 			}
 		}else {
 			report_error("Visestruko definisanje simbola: " + varName, simpleVarDecl);
@@ -90,36 +108,48 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	String methodTypeName = null;
 	public void visit(NonVoidMethType nvmt) {
 		methodTypeName = currentTypeName;
+		methType();
 	}
 	public void visit(VoidMethType vmt) {
 		methodTypeName = "void";
+		methType();
 	}
+	private void methType() {
 	
-	// Obilazan cvora imena programa
-	// Otvara glavni scope
-	public void visit(ProgName progName) {
-		// Set program object to be available
-		progName.obj = Tab.insert(Obj.Prog, progName.getProgName(), Tab.noType);
-		// Open program scope
-		Tab.openScope();
+	}
 
-		report_info("Deklarisano ime programa: " + progName.getProgName(), progName);
-	}
-	
-	// Kada se obidje ova cvor, zavrsio se program
-	public void visit(Program program) {
-		// Chain symbols and close program scope
-		Tab.chainLocalSymbols(program.getProgName().obj);
-		Tab.closeScope();
-	}
-	
 	// Za logovanje definicija nizova
 	public void visit(ArrayDeclProduction arrDeclProd) {
 		if(!globalVarsDefined) {
-			report_info("Definisan globalni niz: " + currentTypeName + " " + arrDeclProd.getArrayName(), null);
+			report_info("Definisan globalni niz: " + currentTypeName + " " + arrDeclProd.getArrayName(), arrDeclProd);
 		}else {
-			report_info("Definisan lokalni niz: " + currentTypeName + " " + arrDeclProd.getArrayName(), null);
+			report_info("Definisan lokalni niz: " + currentTypeName + " " + arrDeclProd.getArrayName(), arrDeclProd);
 		}
 	}
+	
+	int enumConstantValue = 0;
+	public void visit(EnumConstValue ecv){
+		enumConstantValue = ecv.getEnumConstantValue();
+	}
+
+	public void visit(EnumExpr enumExpr) {
+		Obj constant = new Obj(Obj.Con, enumExpr.getEnumConstantName(), Tab.intType, enumConstantValue++, 0);
+		Tab.currentScope.addToLocals(constant);
+	}
+	
+	public void visit(EnumBegin enumBegin) {
+		enumBegin.obj = new Obj(Obj.Type, enumBegin.getEnumName(), Tab.intType);
+		Tab.currentScope.addToLocals(enumBegin.obj);
+		Tab.openScope();
+	}
+	
+	// Detekcija enumeracija
+	public void visit(EnumDecl enumDecl) {
+		Tab.chainLocalSymbols(enumDecl.getEnumBegin().obj);
+		Tab.closeScope();
+		report_info("Definisano nabrajanje: " + enumDecl.getEnumBegin().getEnumName()  , enumDecl);
+	}
+	
+	
 	
 }

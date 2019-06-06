@@ -57,19 +57,18 @@ nonterminal Statement, StatementList, DesignatorStatement, Designator;
 nonterminal SignedTerm, Expr, Term, Factor, Instantiation;
 nonterminal Addop, Mulop;
 nonterminal MyArray, EnumUse;
-nonterminal Program;
+nonterminal Program, Type;
 nonterminal InstPrimitive, InstArray;
-nonterminal VarDeclList, MethDeclList, VarDecl, MultipleVarDecl, MultipleVarDeclExpr, MethDecl, ArrayDecl, EnumDecl, EnumExpr, EnumExprList, EnumInst;
+nonterminal VarDeclList, MethDeclList, VarDecl, MultipleVarDecl, MultipleVarDeclExpr, MethDecl, ArrayDecl,  EnumExpr, EnumExprList, EnumInst;
 nonterminal PrintStmt, PrintParam;
 nonterminal Return, FuncCall;
 nonterminal ConstExpr, ConstInitializationList, ConstDecl;
 nonterminal GlobalDeclList, GlobalDecl,  GlobalVarDecl;
 nonterminal ParameterList, Parameter, ArgList;
-nonterminal Comment, MethType;
-nonterminal EndOfGlobalDeclarations;
+nonterminal Comment, MethType, EndOfGlobalDeclarations, EnumDecl;
 
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj EnumBegin;
 
 Program   ::= (Program) PROG ProgName:progName GlobalDeclList EndOfGlobalDeclarations LBRACE MethDeclList RBRACE;
 
@@ -139,17 +138,17 @@ ConstInitializationList ::= (MultipleConstExpr) ConstExpr COMMA ConstInitializat
 
 ConstDecl ::= (ConstDeclProduction) CONST Type ConstInitializationList SEMI;
 
-EnumInst ::= (EnumInstProduction) EQUAL NUMBER
-			|  /* epsilon */
+EnumInst ::= (EnumConstValue) EQUAL NUMBER:enumConstantValue
+			| (NoEnumInst) /* epsilon */
 			;
 
-EnumExpr ::= (EnumExprProduction) IDENT EnumInst;
+EnumExpr ::= (EnumExpr) IDENT:enumConstantName EnumInst;
 
 EnumExprList ::= (MultipleEnumExpr) EnumExpr COMMA EnumExprList 
 			 | (SingleEnumExpr) EnumExpr
 			 ;
-			 
-EnumDecl ::= (EnumDeclProduction) ENUM IDENT LBRACE EnumExprList RBRACE;
+EnumBegin ::= (EnumBegin) ENUM IDENT:enumName;			 
+EnumDecl ::= (EnumDecl) EnumBegin LBRACE EnumExprList RBRACE;
 
 StatementList ::= (StatementListProduction) StatementList Statement
 				|  /* epsilon */

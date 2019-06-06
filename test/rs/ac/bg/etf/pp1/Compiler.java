@@ -116,20 +116,19 @@ public class Compiler {
 			
 			Program prog = (Program)(s.value);
 			Tab.init();
-			log.info(prog.toString(""));
-			log.info("====================");
-			
+			//log.info(prog.toString(""));
+			log.info(" KRAJ TOKENIZACIJE \n ");
 			SemanticAnalyzer v = new SemanticAnalyzer();
 			prog.traverseBottomUp(v);
 			
 			
-			log.info("====================");
+			log.info(" KRAJ PARSIRANJA \n");
 			tsdump();
 
 			if(!p.errorDetected && v.passed()) {
-				log.info("Parsiranje uspesno zavrseno!");
+				log.info("Parsiranje USPESNO zavrseno!");
 			}else {
-				log.error("Parsiranje nije uspesno zavrseno!");
+				log.error("Parsiranje NEUSPESNO zavrseno!");
 			}
 			
 			i++;
