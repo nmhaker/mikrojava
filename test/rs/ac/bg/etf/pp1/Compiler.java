@@ -13,6 +13,9 @@ import java_cup.runtime.Symbol;
 import rs.ac.bg.etf.pp1.ast.Program;
 import rs.ac.bg.etf.pp1.util.Log4JUtils;
 import rs.etf.pp1.symboltable.Tab;
+import rs.etf.pp1.symboltable.concepts.Scope;
+import rs.etf.pp1.symboltable.visitors.DumpSymbolTableVisitor;
+import rs.etf.pp1.symboltable.visitors.SymbolTableVisitor;
 
 public class Compiler {
 	static {
@@ -46,7 +49,7 @@ public class Compiler {
 				
 				
 				log.info("====================");
-				Tab.dump();
+				tsdump();
 				
 				if(!p.errorDetected && v.passed()) {
 					log.info("Parsiranje uspesno zavrseno!");
@@ -84,7 +87,7 @@ public class Compiler {
 			
 			
 			log.info("====================");
-			Tab.dump();
+			tsdump();
 			
 			if(!p.errorDetected && v.passed()) {
 				log.info("Parsiranje uspesno zavrseno!");
@@ -121,8 +124,8 @@ public class Compiler {
 			
 			
 			log.info("====================");
-			Tab.dump();
-			
+			tsdump();
+
 			if(!p.errorDetected && v.passed()) {
 				log.info("Parsiranje uspesno zavrseno!");
 			}else {
@@ -147,5 +150,14 @@ public class Compiler {
 		}finally {
 			if(br != null) try {br.close(); } catch (IOException e1) {log.error(e1.getMessage(), e1); }
 		}
+	}
+	
+	public static void tsdump() {
+		System.out.println("=====================SYMBOL TABLE DUMP=========================");
+		MySTDump stv = new MySTDump();
+		for (Scope s = Tab.currentScope; s != null; s = s.getOuter()) {
+			s.accept(stv);
+		}
+		System.out.println(stv.getOutput());
 	}
 }

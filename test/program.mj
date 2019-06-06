@@ -24,6 +24,9 @@ program MJProgram
 		x = new int[Broj.PET];
 		x = new int[5];
 		
+		print(getValue(4));
+		getValue(4);
+		
 		read(i);
 		print(x[Broj.NULA]);
 	}

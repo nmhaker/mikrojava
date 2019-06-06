@@ -39,6 +39,7 @@ import java_cup.runtime.*;
 "read" { return new_symbol(sym.READ, yytext()); }
 "return"  { return new_symbol(sym.RETURN, yytext()); }
 "new"	  { return new_symbol(sym.NEW, yytext()); }
+"void"	  { return new_symbol(sym.VOID, yytext()); }
 "+"	  { return new_symbol(sym.PLUS, yytext()); }
 "-"	  { return new_symbol(sym.MINUS, yytext()); }
 "*"	  { return new_symbol(sym.MUL, yytext()); }

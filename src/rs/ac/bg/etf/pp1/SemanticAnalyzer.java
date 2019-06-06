@@ -34,14 +34,25 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		return !errorDetected;
 	}
 	
+	
+	
+	
+	
+	// Nisu ubacili u tabelu simbola Bool tip...
+	public SemanticAnalyzer() {
+		super();
+		Tab.currentScope.addToLocals(new Obj(Obj.Type, "bool", new Struct(Struct.Bool), Obj.NO_VALUE, Obj.NO_VALUE));
+	}
+
+	// Zapamtimo ime tipa i cvor kad god se nesto definise
 	Struct currentType = null;
+	String currentTypeName = null;
 	public void visit(TypeProduction typeProduction) {
 		Obj typeObj = Tab.find(typeProduction.getTypeName());
+		currentTypeName = typeProduction.getTypeName();
 		if(typeObj == Tab.noObj) {
 			if(typeProduction.getTypeName().equals("void")) {
-				
-			}else if(typeProduction.getTypeName().equals("bool")) {
-				
+				currentType = Tab.noType;
 			}else
 				report_error("Greska ne postoji tip: " + typeProduction.getTypeName(), typeProduction);
 		}else {
@@ -49,47 +60,66 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		}
 	}
 	
+	// Detektujemo definicije promenljivih
 	public void visit(SimpleVarDecl simpleVarDecl) {
 		String varName = simpleVarDecl.getVarName();
 		if(Tab.find(varName) == Tab.noObj) {
 			Tab.insert(Obj.Var, varName, currentType);
+			if(!globalVarsDefined) {
+				report_info("Definisana globalna promenljiva: " + currentTypeName + " " + varName, null);
+			}else {
+				report_info("Definisana lokalna promenljiva: " + currentTypeName + " " + varName, null);
+			}
 		}else {
 			report_error("Visestruko definisanje simbola: " + varName, simpleVarDecl);
 		}
 	}
 	
-	public void visit(MultipleVariableDecl varDecl) {
-		if(!globalVarsDefined)
-			report_info("Visited VarDecl, defining global variables", varDecl);
-		else
-			report_info("Visited VarDecl, defining local variables", varDecl);
-	}
-	
+	//	Produkcija koja oznacava kraj definisanja globalnih promenljivih
 	Boolean globalVarsDefined = false;
-	public void visit(MethDeclListProduction methDeclListProd) {
+	public void visit(EndOfGlobalDeclarationsProduction e) {
 		globalVarsDefined = true;
-		report_info("Visited MethDeclListProduction", methDeclListProd);
 	}
 	
+	//	Deklaracije metoda
+	public void visit(MethDeclProduction methDeclProd) {
+		report_info("Deklarisana metoda: " + methodTypeName +  " " + methDeclProd.getMethodName() , methDeclProd);
+	}
+	
+	// Zapamtimo tip kojim smo definisali metodu za kasnije
+	String methodTypeName = null;
+	public void visit(NonVoidMethType nvmt) {
+		methodTypeName = currentTypeName;
+	}
+	public void visit(VoidMethType vmt) {
+		methodTypeName = "void";
+	}
+	
+	// Obilazan cvora imena programa
+	// Otvara glavni scope
 	public void visit(ProgName progName) {
 		// Set program object to be available
 		progName.obj = Tab.insert(Obj.Prog, progName.getProgName(), Tab.noType);
 		// Open program scope
 		Tab.openScope();
 
-		report_info("Visited ProgName", progName);
+		report_info("Deklarisano ime programa: " + progName.getProgName(), progName);
 	}
 	
-	public void visit(GlobalDeclListProduction globalDeclListProd) {
-		report_info("Visited GlobalDeclListProduction", globalDeclListProd);
-	}
-	
+	// Kada se obidje ova cvor, zavrsio se program
 	public void visit(Program program) {
 		// Chain symbols and close program scope
 		Tab.chainLocalSymbols(program.getProgName().obj);
 		Tab.closeScope();
-
-		report_info("Visited Program", program);
+	}
+	
+	// Za logovanje definicija nizova
+	public void visit(ArrayDeclProduction arrDeclProd) {
+		if(!globalVarsDefined) {
+			report_info("Definisan globalni niz: " + currentTypeName + " " + arrDeclProd.getArrayName(), null);
+		}else {
+			report_info("Definisan lokalni niz: " + currentTypeName + " " + arrDeclProd.getArrayName(), null);
+		}
 	}
 	
 }
