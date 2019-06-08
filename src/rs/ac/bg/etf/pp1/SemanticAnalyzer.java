@@ -38,7 +38,15 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		super();
 		Tab.currentScope.addToLocals(new Obj(Obj.Type, "bool", new Struct(Struct.Bool), Obj.NO_VALUE, Obj.NO_VALUE));
 	}
-
+	
+	private Obj methodScopeFind(String name) {
+		Obj resultObj = null;
+		Scope s = Tab.currentScope();
+		if (s.getLocals() != null) {
+				resultObj = s.getLocals().searchKey(name);
+		}
+		return (resultObj != null) ? resultObj : Tab.noObj;
+	}
 	
 	// DEFINICIJE SIMBOLA
 		
@@ -94,18 +102,29 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			// Detektujemo definicije promenljivih
 			public void visit(SimpleVarDecl simpleVarDecl) {
 				String varName = simpleVarDecl.getVarName();
-				if(Tab.find(varName) == Tab.noObj || methodBeingDefined) {
-					Tab.insert(Obj.Var, varName, currentType);
-					if(!globalVarsDefined) {
-						numOfGlobalVarsDefined++;
-						report_info("Definisana globalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
-					}else {
+				if(methodBeingDefined) {
+					if(methodScopeFind(varName) == Tab.noObj) {
+						Tab.insert(Obj.Var, varName, currentType);
 						numOfLocalVarsDefined++;
 						report_info("Definisana lokalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
+					}else {
+						report_error("Visestruko definisanje simbola: " + varName, simpleVarDecl);
+						errorDetected = true;
 					}
 				}else {
-					report_error("Visestruko definisanje simbola: " + varName, simpleVarDecl);
-					errorDetected = true;
+					if(Tab.find(varName) == Tab.noObj) {
+						Tab.insert(Obj.Var, varName, currentType);
+						if(!globalVarsDefined) {
+							numOfGlobalVarsDefined++;
+							report_info("Definisana globalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
+						}else {
+							numOfLocalVarsDefined++;
+							report_info("Definisana lokalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
+						}
+					}else {
+						report_error("Visestruko definisanje simbola: " + varName, simpleVarDecl);
+						errorDetected = true;
+					}
 				}
 			}
 			
@@ -166,18 +185,29 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			public void visit(ArrayDecl arrayDecl) {
 				String arrName = arrayDecl.getArrayName();
 				declaredArrayName = arrName;
-				if(Tab.find(arrName) != Tab.noObj && !methodBeingDefined) {
-					report_error("Visestruko definisanje simbola: " + arrName, arrayDecl);
-					errorDetected = true;
-					return;
-				}
-				Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, Tab.intType));
-				if(!globalVarsDefined) {
-					numOfGlobalArraysDefined++;
-					report_info("Definisan globalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
-				}else {
+				if(methodBeingDefined) {
+					if(methodScopeFind(arrName) != Tab.noObj ) {
+						report_error("Visestruko definisanje simbola: " + arrName, arrayDecl);
+						errorDetected = true;
+						return;
+					}
+					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, Tab.intType));
 					numOfLocalArraysDefined++;
 					report_info("Definisan lokalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
+				}else {
+					if(Tab.find(arrName) != Tab.noObj ) {
+						report_error("Visestruko definisanje simbola: " + arrName, arrayDecl);
+						errorDetected = true;
+						return;
+					}
+					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, Tab.intType));
+					if(!globalVarsDefined) {
+						numOfGlobalArraysDefined++;
+						report_info("Definisan globalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
+					}else {
+						numOfLocalArraysDefined++;
+						report_info("Definisan lokalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
+					}
 				}
 			}
 		

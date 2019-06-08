@@ -13,7 +13,7 @@ program MJProgram
 		return c1 + 2;
 	}
 	
-	bool checkValue(int a) int bb; bool c;{
+	bool checkValue(int a) int bbb; bool bb;{
 		return xx[0] + a;
 	}
 	
