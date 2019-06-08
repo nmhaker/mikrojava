@@ -140,9 +140,9 @@ public class Compiler {
 		System.out.println("Broj globalnih konstanti je: " + sa.getNumOfConstants());
 		System.out.println("Broj globalnih enumeracija je: " + sa.getNumOfEnumerations());
 		System.out.println("Broj globalnih promenljivih je: " + sa.getNumOfGlobalVariables());
-		System.out.println("Broj lokalnih promenljivih je: " + sa.getNumOfLocalVariables());
 		System.out.println("Broj globalnih nizova je: " + sa.getNumOfGlobalArrays());
-		System.out.println("Broj lokalnih nizova je: " + sa.getNumOfLocalArrays());
+		System.out.println("Broj lokalnih promenljivih (Main) je: " + sa.getNumOfLocalVariables());
+		System.out.println("Broj lokalnih nizova (Main) je: " + sa.getNumOfLocalArrays());
 		System.out.println("Broj metoda je: " + sa.getNumOfMethods());
 		System.out.println("");
 	}

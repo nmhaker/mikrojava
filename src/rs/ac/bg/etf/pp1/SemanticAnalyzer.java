@@ -105,7 +105,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				if(methodBeingDefined) {
 					if(methodScopeFind(varName) == Tab.noObj) {
 						Tab.insert(Obj.Var, varName, currentType);
-						numOfLocalVarsDefined++;
+						if(methName != null && methName.equals("main")) numOfLocalVarsDefined++;
 						report_info("Definisana lokalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
 					}else {
 						report_error("Visestruko definisanje simbola: " + varName, simpleVarDecl);
@@ -114,24 +114,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				}else {
 					if(Tab.find(varName) == Tab.noObj) {
 						Tab.insert(Obj.Var, varName, currentType);
-						if(!globalVarsDefined) {
-							numOfGlobalVarsDefined++;
-							report_info("Definisana globalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
-						}else {
-							numOfLocalVarsDefined++;
-							report_info("Definisana lokalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
-						}
+						numOfGlobalVarsDefined++;
+						report_info("Definisana globalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
 					}else {
 						report_error("Visestruko definisanje simbola: " + varName, simpleVarDecl);
 						errorDetected = true;
 					}
 				}
-			}
-			
-			//	Produkcija koja oznacava kraj definisanja globalnih promenljivih
-			Boolean globalVarsDefined = false;
-			public void visit(EndOfGlobalDeclarationsProduction e) {
-				globalVarsDefined = true;
 			}
 			
 		// DEFINISANJE METODA
@@ -151,29 +140,42 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			
 			private String methName = null;
 			public void visit(MethBegin methBegin) {
+				numOfParameters = 0;
 				methodBeingDefined = true;
 				methName = methBegin.getMethodName();
 				methBegin.obj = Tab.insert(Obj.Meth, methName, currentType);
 				Tab.openScope();
 			}
 			
+			private int numOfParameters = 0;
+			
 			public void visit(ParameterVarProduction paramVarProd) {
 				Tab.insert(Obj.Var, paramVarProd.getParamName(), currentType);
+				numOfParameters++;
 			}
 
 			public void visit(ParameterArrayProduction paramArrayProd) {
 				Tab.insert(Obj.Var, declaredArrayName, currentType);
+				numOfParameters++;
 			}
 		
 			public void visit(MethDecl methDecl) {
 				Tab.chainLocalSymbols(methDecl.getMethBegin().obj);
 				Tab.closeScope();
 				if(methName.equals("main")) {
+					if(!methType.equals("void")) {
+						report_error("Metoda MAIN nije definisana kao VOID !", methDecl);
+						errorDetected = true;
+					}
+					if(numOfParameters != 0) {
+						report_error("Metoda MAIN ima argumente, ocekivano 0 !", methDecl);
+						errorDetected = true;
+					}
 					mainDefined = true;
 				}
+				methodBeingDefined = false;
 				numOfMethodsDefined++;
 				report_info("Deklarisana metoda: " + methType +  " " + methName , methDecl);
-				methodBeingDefined = false;
 			}
 			
 		// DEFINISANJE NIZOVA
@@ -192,7 +194,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 						return;
 					}
 					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, Tab.intType));
-					numOfLocalArraysDefined++;
+					if(methName != null && methName.equals("main")) numOfLocalArraysDefined++;
 					report_info("Definisan lokalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
 				}else {
 					if(Tab.find(arrName) != Tab.noObj ) {
@@ -201,13 +203,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 						return;
 					}
 					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, Tab.intType));
-					if(!globalVarsDefined) {
-						numOfGlobalArraysDefined++;
-						report_info("Definisan globalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
-					}else {
-						numOfLocalArraysDefined++;
-						report_info("Definisan lokalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
-					}
+					numOfGlobalArraysDefined++;
+					report_info("Definisan globalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
 				}
 			}
 		

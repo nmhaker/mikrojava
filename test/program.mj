@@ -17,7 +17,7 @@ program MJProgram
 		return xx[0] + a;
 	}
 	
-	void main(char idemoo) int x, novo; int i; int xy[]; {
+	void main() int x, novo; int i; int xy[]; {
 		
 		x = new int[Broj.PET];
 		x = new int[5];

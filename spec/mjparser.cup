@@ -67,15 +67,13 @@ nonterminal Return, FuncCall;
 nonterminal ConstExpr, ConstInitializationList, ConstDecl;
 nonterminal GlobalDeclList, GlobalDecl,  GlobalVarDecl;
 nonterminal ParameterList, Parameter, ArgList;
-nonterminal Comment, MethType, EndOfGlobalDeclarations, EnumDecl;
+nonterminal Comment, MethType, EnumDecl;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, MethBegin;
 
-Program   ::= (Program) PROG ProgName:progName GlobalDeclList EndOfGlobalDeclarations LBRACE MethDeclList RBRACE;
+Program   ::= (Program) PROG ProgName:progName GlobalDeclList LBRACE MethDeclList RBRACE;
 
 ProgName ::= (ProgName) IDENT:progName;
-
-EndOfGlobalDeclarations ::= (EndOfGlobalDeclarationsProduction) /* epsilon */ ;
 
 GlobalDeclList ::= (GlobalDeclListProduction) GlobalDeclList GlobalDecl
 				|  /* epsilon */
