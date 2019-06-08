@@ -125,6 +125,13 @@ public class MySTDump extends SymbolTableVisitor {
 			}
 			output.append("]");
 			break;
+		case Struct.Enum:
+			output.append("Enum [");
+			for(Obj obj : structToVisit.getMembers()) {
+				obj.accept(this);
+			}
+			output.append("]");
+			break;
 		}
 
 	}

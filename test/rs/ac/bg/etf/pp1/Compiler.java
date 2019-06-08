@@ -14,8 +14,6 @@ import rs.ac.bg.etf.pp1.ast.Program;
 import rs.ac.bg.etf.pp1.util.Log4JUtils;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Scope;
-import rs.etf.pp1.symboltable.visitors.DumpSymbolTableVisitor;
-import rs.etf.pp1.symboltable.visitors.SymbolTableVisitor;
 
 public class Compiler {
 	static {
@@ -121,8 +119,10 @@ public class Compiler {
 			SemanticAnalyzer v = new SemanticAnalyzer();
 			prog.traverseBottomUp(v);
 			
-			
 			log.info(" KRAJ PARSIRANJA \n");
+			
+			syntaxInfo(v);
+			
 			tsdump();
 
 			if(!p.errorDetected && v.passed()) {
@@ -133,7 +133,19 @@ public class Compiler {
 			
 			i++;
 		}
-}
+	}
+	
+	public static void syntaxInfo(SemanticAnalyzer sa) {
+		System.out.println("========= SINTAKSNA ANALIZA =========");
+		System.out.println("Broj globalnih konstanti je: " + sa.getNumOfConstants());
+		System.out.println("Broj globalnih enumeracija je: " + sa.getNumOfEnumerations());
+		System.out.println("Broj globalnih promenljivih je: " + sa.getNumOfGlobalVariables());
+		System.out.println("Broj lokalnih promenljivih je: " + sa.getNumOfLocalVariables());
+		System.out.println("Broj globalnih nizova je: " + sa.getNumOfGlobalArrays());
+		System.out.println("Broj lokalnih nizova je: " + sa.getNumOfLocalArrays());
+		System.out.println("Broj metoda je: " + sa.getNumOfMethods());
+		System.out.println("");
+	}
 	
 	public static void main(String[] args) throws Exception {
 		Logger log = Logger.getLogger(Compiler.class);

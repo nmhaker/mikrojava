@@ -59,7 +59,7 @@ nonterminal Addop, Mulop;
 nonterminal MyArray, EnumUse;
 nonterminal Program, Type;
 nonterminal InstPrimitive, InstArray;
-nonterminal VarDeclList, MethDeclList, VarDecl, MultipleVarDecl, MultipleVarDeclExpr, MethDecl, ArrayDecl,  EnumExpr, EnumExprList, EnumInst;
+nonterminal VarDeclList, MethDeclList, VarDecl, VarUse, MultipleVarDecl, MultipleVarDeclExpr, MethDecl, ArrayDecl,  EnumExpr, EnumExprList, EnumInst;
 nonterminal PrintStmt, PrintParam;
 nonterminal Return, FuncCall;
 nonterminal ConstExpr, ConstInitializationList, ConstDecl;
@@ -67,8 +67,7 @@ nonterminal GlobalDeclList, GlobalDecl,  GlobalVarDecl;
 nonterminal ParameterList, Parameter, ArgList;
 nonterminal Comment, MethType, EndOfGlobalDeclarations, EnumDecl;
 
-nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj EnumBegin;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, MethBegin;
 
 Program   ::= (Program) PROG ProgName:progName GlobalDeclList EndOfGlobalDeclarations LBRACE MethDeclList RBRACE;
 
@@ -112,31 +111,32 @@ MethDeclList ::= (MethDeclListProduction) MethDeclList MethDecl
 Return ::=  (ReturnProduction) RETURN Expr SEMI
 				;
 				
-Parameter ::= (ParameterVarProduction) Type IDENT
-			| (ParameterArrayProduction) MyArray
+Parameter ::= (ParameterVarProduction) Type IDENT:paramName
+			| (ParameterArrayProduction) ArrayDecl
 			;
 				
 ParameterList ::= (MultipleParameterListProduction) Parameter COMMA ParameterList
 			  |   (SingleParameterListProduction) Parameter
 			  |   /* epsilon */
 			  ;
-
-MethType ::= (NonVoidMethType) Type:methType
+MethType ::= (NonVoidMethType) Type
 		 |	 (VoidMethType) VOID 
 		 ;				
 
-MethDecl ::= (MethDeclProduction) MethType IDENT:methodName LPAREN ParameterList RPAREN VarDeclList LBRACE StatementList RBRACE
+MethBegin ::= (MethBegin) MethType IDENT:methodName;
+
+MethDecl ::= (MethDecl) MethBegin LPAREN ParameterList RPAREN VarDeclList LBRACE StatementList RBRACE
 		;
 
-ArrayDecl ::= (ArrayDeclProduction) IDENT:arrayName LBRACKET RBRACKET ;
+ArrayDecl ::= (ArrayDecl) IDENT:arrayName LBRACKET RBRACKET ;
 
-ConstExpr ::= (ConstExprProduction) IDENT EQUAL NUMBER;
+ConstExpr ::= (ConstExpr) IDENT:constIdent EQUAL NUMBER:constValue;
 
 ConstInitializationList ::= (MultipleConstExpr) ConstExpr COMMA ConstInitializationList
 						|   (SingleConstExpr) ConstExpr
 						;						
 
-ConstDecl ::= (ConstDeclProduction) CONST Type ConstInitializationList SEMI;
+ConstDecl ::= (ConstDecl) CONST Type ConstInitializationList SEMI;
 
 EnumInst ::= (EnumConstValue) EQUAL NUMBER:enumConstantValue
 			| (NoEnumInst) /* epsilon */
@@ -170,7 +170,7 @@ ArgList ::= (ArgumentListProduction) COMMA ArgList
 		| /* epsilon */
 		;
 		    
-FuncCall  ::=  (FuncCallProduction)  IDENT LPAREN Expr ArgList RPAREN;
+FuncCall  ::=  (FuncCallProduction)  IDENT:funcName LPAREN Expr ArgList RPAREN;
 
 DesignatorStatement ::=  (DesStatAssignment) Designator EQUAL Expr
 					  |  (DesStatAssignmentError) error:l {: parser.report_error("Izvrsen oporavak u naredbi dodele do prve ';' " , null); :}
@@ -198,7 +198,7 @@ InstArray  	  ::= (InstArrayProduction) InstPrimitive LBRACKET Expr RBRACKET;
 Instantiation ::= (InstPrimit) InstPrimitive
 			    | (InstArr) InstArray;
 		
-Factor ::= (IdentFactor) IDENT
+Factor ::= (IdentFactor) VarUse
 		 | (NumberFactor) NUMBER
 		 | (StringFactor) STRING
 		 | (GroupFactor) LPAREN Expr RPAREN
@@ -208,13 +208,14 @@ Factor ::= (IdentFactor) IDENT
 		 | (EnumUseFactor) EnumUse
 		 | (FuncCallFactor) FuncCall
 		 ;
+		 
+VarUse ::= (VarUse) IDENT:varName;
 		
-MyArray  ::= (MyArrayProduction) IDENT LBRACKET Expr RBRACKET;		
+MyArray  ::= (MyArray) IDENT:arrName LBRACKET Expr RBRACKET;		
 
-EnumUse   ::= (EnumUseProduction) IDENT DOT IDENT;
+EnumUse   ::= (EnumUse) IDENT:enumName DOT IDENT:enumConst;
 		
-Designator	::=	(IdentDesignator) IDENT
-			|	(EnumUseDesignator) EnumUse
+Designator	::=	(IdentDesignator) VarUse
 			|   (MyArrayDesignator) MyArray
 			;
 		

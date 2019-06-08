@@ -16,13 +16,21 @@ program MJProgram
 		return xx[0] + a;
 	}
 	
-	void main(char idemoo) int i; int x[]; {
+	void main(char idemoo) int i; int xy[]; {
 		
 		x = new int[Broj.PET];
 		x = new int[5];
 		
+		xy[3] = 5;
+		
+		i = xy[2];
+		
+		getValue(x);
+		
 		print(getValue(4));
 		getValue(4);
+		
+		a = checkvalue(5);
 		
 		read(i);
 		print(x[Broj.NULA]);

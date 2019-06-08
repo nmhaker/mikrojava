@@ -46,7 +46,7 @@
 	</target>
 	
 	<target name="compile" depends="repackage">
-		<javac srcdir="src/rs/ac/bg/etf/pp1" includeantruntime="false">
+		<javac srcdir="test/rs/ac/bg/etf/pp1;src/rs/ac/bg/etf/pp1;" includeantruntime="false">
 			<classpath>
 				<pathelement path="lib/JFlex.jar" />
 				<pathelement path="lib/cup_v10k.jar" />

@@ -3,11 +3,8 @@ package rs.ac.bg.etf.pp1;
 import org.apache.log4j.Logger;
 
 import rs.ac.bg.etf.pp1.ast.*;
-
 import rs.etf.pp1.symboltable.*;
 import rs.etf.pp1.symboltable.concepts.*;
-import rs.etf.pp1.symboltable.structure.HashTableDataStructure;
-import rs.etf.pp1.symboltable.structure.SymbolDataStructure;
 
 public class SemanticAnalyzer extends VisitorAdaptor {
 
@@ -36,120 +33,316 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		return !errorDetected;
 	}
 	
-	
-		
-	// Obilazan cvora imena programa
-	// Otvara glavni scope
-	public void visit(ProgName progName) {
-		// Set program object to be available
-		progName.obj = Tab.insert(Obj.Prog, progName.getProgName(), Tab.noType);
-		// Open program scope
-		Tab.openScope();
-
-		report_info("Deklarisano ime programa: " + progName.getProgName(), progName);
-	}
-	
-	// Kada se obidje ova cvor, zavrsio se program
-	public void visit(Program program) {
-		// Chain symbols and close program scope
-		Tab.chainLocalSymbols(program.getProgName().obj);
-		Tab.closeScope();
-	}
-	
-	// Nisu ubacili u tabelu simbola Bool tip...
+	// KONSTRUKTOR ZA UBACIVANJE BOOL TIPA U UNIVERSE OPSEG
 	public SemanticAnalyzer() {
 		super();
 		Tab.currentScope.addToLocals(new Obj(Obj.Type, "bool", new Struct(Struct.Bool), Obj.NO_VALUE, Obj.NO_VALUE));
 	}
 
-	// Zapamtimo ime tipa i cvor kad god se nesto definise
-	Struct currentType = null;
-	String currentTypeName = null;
-	public void visit(TypeProduction typeProduction) {
-		Obj typeObj = Tab.find(typeProduction.getTypeName());
-		currentTypeName = typeProduction.getTypeName();
-		if(typeObj == Tab.noObj) {
-			if(typeProduction.getTypeName().equals("void")) {
-				currentType = Tab.noType;
-			}else
-				report_error("Greska ne postoji tip: " + typeProduction.getTypeName(), typeProduction);
-		}else {
-			currentType = typeObj.getType();
-		}
-	}
 	
-	// Detektujemo definicije promenljivih
-	public void visit(SimpleVarDecl simpleVarDecl) {
-		String varName = simpleVarDecl.getVarName();
-		if(Tab.find(varName) == Tab.noObj) {
-			Tab.insert(Obj.Var, varName, currentType);
-			if(!globalVarsDefined) {
-				report_info("Definisana globalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
-			}else {
-				report_info("Definisana lokalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
+	// DEFINICIJE SIMBOLA
+		
+		// PROGRAM DEFINICIJA
+
+			// Otvaram glavni scope
+			public void visit(ProgName progName) {
+				// Set program object to be available
+				progName.obj = Tab.insert(Obj.Prog, progName.getProgName(), Tab.noType);
+				// Open program scope
+				Tab.openScope();
+
+				report_info("Deklarisano ime programa: " + progName.getProgName(), progName);
 			}
-		}else {
-			report_error("Visestruko definisanje simbola: " + varName, simpleVarDecl);
+			
+			// Kada se obidje ovaj cvor, zavrsio se program
+			boolean mainDefined = false;
+			public void visit(Program program) {
+				// Chain symbols and close program scope
+				Tab.chainLocalSymbols(program.getProgName().obj);
+				Tab.closeScope();
+				
+				if(!mainDefined) {
+					report_error("Nije definisana main metoda", program);
+					errorDetected = true;
+				}
+			}
+			
+		// PAMCENJE PODATAKA O TIPU NECEGA GENERALNO
+			
+			// Zapamtimo ime tipa i cvor kad god se nesto definise
+			Struct currentType = null;
+			String currentTypeName = null;
+			public void visit(TypeProduction typeProduction) {
+				Obj typeObj = Tab.find(typeProduction.getTypeName());
+				currentTypeName = typeProduction.getTypeName();
+				if(typeObj == Tab.noObj) {
+					if(typeProduction.getTypeName().equals("void")) {
+						currentType = Tab.noType;
+					}else {
+						report_error("Greska ne postoji tip: " + typeProduction.getTypeName(), typeProduction);
+						errorDetected = true;
+					}
+				}else {
+					currentType = typeObj.getType();
+				}
+			}
+			
+		// DEFINISANJE PROMENLJIVIH
+		private int numOfGlobalVarsDefined = 0;
+		private int numOfLocalVarsDefined = 0;
+		
+			// Detektujemo definicije promenljivih
+			public void visit(SimpleVarDecl simpleVarDecl) {
+				String varName = simpleVarDecl.getVarName();
+				if(Tab.find(varName) == Tab.noObj || methodBeingDefined) {
+					Tab.insert(Obj.Var, varName, currentType);
+					if(!globalVarsDefined) {
+						numOfGlobalVarsDefined++;
+						report_info("Definisana globalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
+					}else {
+						numOfLocalVarsDefined++;
+						report_info("Definisana lokalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
+					}
+				}else {
+					report_error("Visestruko definisanje simbola: " + varName, simpleVarDecl);
+					errorDetected = true;
+				}
+			}
+			
+			//	Produkcija koja oznacava kraj definisanja globalnih promenljivih
+			Boolean globalVarsDefined = false;
+			public void visit(EndOfGlobalDeclarationsProduction e) {
+				globalVarsDefined = true;
+			}
+			
+		// DEFINISANJE METODA
+		private int numOfMethodsDefined = 0;
+		
+		private boolean methodBeingDefined = false;
+
+			// Zapamtimo tip kojim smo definisali metodu za kasnije
+			private String methType = null;
+			public void visit(VoidMethType vmt) {
+				methType = currentTypeName = "void";
+				currentType = Tab.noType;
+			}
+			public void visit(NonVoidMethType nvmt){
+				methType = currentTypeName;
+			}
+			
+			private String methName = null;
+			public void visit(MethBegin methBegin) {
+				methodBeingDefined = true;
+				methName = methBegin.getMethodName();
+				methBegin.obj = Tab.insert(Obj.Meth, methName, currentType);
+				Tab.openScope();
+			}
+			
+			public void visit(ParameterVarProduction paramVarProd) {
+				Tab.insert(Obj.Var, paramVarProd.getParamName(), currentType);
+			}
+
+			public void visit(ParameterArrayProduction paramArrayProd) {
+				Tab.insert(Obj.Var, declaredArrayName, currentType);
+			}
+		
+			public void visit(MethDecl methDecl) {
+				Tab.chainLocalSymbols(methDecl.getMethBegin().obj);
+				Tab.closeScope();
+				if(methName.equals("main")) {
+					mainDefined = true;
+				}
+				numOfMethodsDefined++;
+				report_info("Deklarisana metoda: " + methType +  " " + methName , methDecl);
+				methodBeingDefined = false;
+			}
+			
+		// DEFINISANJE NIZOVA
+		private int numOfLocalArraysDefined = 0;
+		private int numOfGlobalArraysDefined = 0;
+
+			// Detektujemo definiciju niza
+			private String declaredArrayName = null;
+			public void visit(ArrayDecl arrayDecl) {
+				String arrName = arrayDecl.getArrayName();
+				declaredArrayName = arrName;
+				if(Tab.find(arrName) != Tab.noObj && !methodBeingDefined) {
+					report_error("Visestruko definisanje simbola: " + arrName, arrayDecl);
+					errorDetected = true;
+					return;
+				}
+				Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, Tab.intType));
+				if(!globalVarsDefined) {
+					numOfGlobalArraysDefined++;
+					report_info("Definisan globalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
+				}else {
+					numOfLocalArraysDefined++;
+					report_info("Definisan lokalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
+				}
+			}
+		
+		// DEFINISANJE ENUMERACIJA 
+		private int numOfEnumerationsDefined = 0;
+
+			// Dohvatam vrednost simbolicke konstante
+			int enumConstantValue = 0;
+			public void visit(EnumConstValue ecv){
+				enumConstantValue = ecv.getEnumConstantValue();
+			}
+
+			// Ubacam simbolicku konstantu kao novi objektni cvor u strukturni cvor
+			public void visit(EnumExpr enumExpr) {
+				Obj constant = new Obj(Obj.Con, enumExpr.getEnumConstantName(), Tab.intType, enumConstantValue++, 0);
+				Tab.currentScope.addToLocals(constant);
+			}
+			
+			// Otvaram opseg i kreiram objektni cvor kao i strukturni
+			public void visit(EnumBegin enumBegin) {
+				if(Tab.find(enumBegin.getEnumName()) != Tab.noObj) {
+					report_error("Visestruko definisanje simbola: " + enumBegin.getEnumName(), enumBegin);
+					errorDetected = true;
+					return;
+				}
+				enumBegin.obj = new Obj(Obj.Con, enumBegin.getEnumName(), new Struct(Struct.Enum), -1, 0);
+				Tab.currentScope.addToLocals(enumBegin.obj);
+				Tab.openScope();
+			}
+			
+			// Ulancavam simbolicke konstante 
+			public void visit(EnumDecl enumDecl) {
+				enumDecl.getEnumBegin().obj.getType().setMembers(Tab.currentScope().getLocals());
+				Tab.closeScope();
+				numOfEnumerationsDefined++;
+				report_info("Definisano nabrajanje: " + enumDecl.getEnumBegin().getEnumName()  , enumDecl);
+			}
+		
+		//	DEFINISANJE KONSTANTI	
+		private int numOfConstantsDefined = 0;
+			
+			// Ulancavanje konstanti
+			String constIdent = null;
+			public void visit(ConstExpr constExpr) {
+				// Proveri postojece ime u tabeli simbola
+				if(Tab.find(constExpr.getConstIdent()) != Tab.noObj) {
+					report_error("Visestruko definisanje simbola: " + constExpr.getConstIdent(), constExpr);
+					errorDetected = true;
+					return;
+				}
+				constIdent = constExpr.getConstIdent();
+				Obj obj = new Obj(Obj.Con, constIdent, Tab.intType, constExpr.getConstValue(), 0);
+				Tab.currentScope().addToLocals(obj);
+			}
+			
+			// Detektovanje definisane konstante
+			public void visit(ConstDecl constDecl) {
+				numOfConstantsDefined++;
+				report_info("Definisana konstanta: " + constIdent, constDecl);
+			}
+
+	// DETEKCIJA UPOTREBE SIMBOLA
+			
+
+		// Detekcija upotrebe promenljive 
+		public void visit(VarUse varUse) {
+			MySTDump mystdump = new MySTDump();
+			mystdump.visitObjNode(Tab.find(varUse.getVarName()));
+			report_info("Detektovano koriscenje simbola: " + mystdump.getOutput() , varUse);
 		}
+			
+		// Detekcija upotrebe niza
+		public void visit(MyArray myArray) {
+			MySTDump mystdump = new MySTDump();
+			mystdump.visitObjNode(Tab.find(myArray.getArrName()));
+			report_info("Detektovano koriscenje simbola: " + mystdump.getOutput(), myArray );
+		}
+
+		// Detekcija upotreba Enum-a
+		public void visit(EnumUse enumUse) {
+			String enumName = enumUse.getEnumName();
+			String enumValue = enumUse.getEnumConst();
+			MySTDump mystdump = new MySTDump();
+			mystdump.visitObjNode(Tab.find(enumName));
+			report_info("Detektovano koriscenje simbola: " + enumValue + " iz: " + mystdump.getOutput(), enumUse);
+		}
+		
+	// Syntax info getters
+	public int getNumOfGlobalVariables() {
+		return numOfGlobalVarsDefined;
 	}
-	
-	//	Produkcija koja oznacava kraj definisanja globalnih promenljivih
-	Boolean globalVarsDefined = false;
-	public void visit(EndOfGlobalDeclarationsProduction e) {
-		globalVarsDefined = true;
+	public int getNumOfLocalVariables() {
+		return numOfGlobalVarsDefined;
 	}
-	
-	//	Deklaracije metoda
-	public void visit(MethDeclProduction methDeclProd) {
-		report_info("Deklarisana metoda: " + methodTypeName +  " " + methDeclProd.getMethodName() , methDeclProd);
+	public int getNumOfGlobalArrays() {
+		return numOfGlobalArraysDefined;
 	}
-	
-	// Zapamtimo tip kojim smo definisali metodu za kasnije
-	String methodTypeName = null;
-	public void visit(NonVoidMethType nvmt) {
-		methodTypeName = currentTypeName;
-		methType();
+	public int getNumOfEnumerations() {
+		return numOfEnumerationsDefined;
 	}
-	public void visit(VoidMethType vmt) {
-		methodTypeName = "void";
-		methType();
+	public int getNumOfLocalArrays() {
+		return numOfLocalArraysDefined;
 	}
-	private void methType() {
-	
+	public int getNumOfConstants() {
+		return numOfConstantsDefined;
+	}
+	public int getNumOfMethods() {
+		return numOfMethodsDefined;
 	}
 
-	// Za logovanje definicija nizova
-	public void visit(ArrayDeclProduction arrDeclProd) {
-		if(!globalVarsDefined) {
-			report_info("Definisan globalni niz: " + currentTypeName + " " + arrDeclProd.getArrayName(), arrDeclProd);
-		}else {
-			report_info("Definisan lokalni niz: " + currentTypeName + " " + arrDeclProd.getArrayName(), arrDeclProd);
-		}
-	}
-	
-	int enumConstantValue = 0;
-	public void visit(EnumConstValue ecv){
-		enumConstantValue = ecv.getEnumConstantValue();
-	}
-
-	public void visit(EnumExpr enumExpr) {
-		Obj constant = new Obj(Obj.Con, enumExpr.getEnumConstantName(), Tab.intType, enumConstantValue++, 0);
-		Tab.currentScope.addToLocals(constant);
-	}
-	
-	public void visit(EnumBegin enumBegin) {
-		enumBegin.obj = new Obj(Obj.Type, enumBegin.getEnumName(), Tab.intType);
-		Tab.currentScope.addToLocals(enumBegin.obj);
-		Tab.openScope();
-	}
-	
-	// Detekcija enumeracija
-	public void visit(EnumDecl enumDecl) {
-		Tab.chainLocalSymbols(enumDecl.getEnumBegin().obj);
-		Tab.closeScope();
-		report_info("Definisano nabrajanje: " + enumDecl.getEnumBegin().getEnumName()  , enumDecl);
-	}
-	
-	
-	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
