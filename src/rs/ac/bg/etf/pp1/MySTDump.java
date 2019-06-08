@@ -53,7 +53,6 @@ public class MySTDump extends SymbolTableVisitor {
 			output.append("\n");
 			nextIndentationLevel();
 		}
-		
 
 		for (Obj o : objToVisit.getLocalSymbols()) {
 			output.append(currentIndent.toString());

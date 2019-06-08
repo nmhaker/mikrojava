@@ -215,13 +215,14 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				numOfEnumerationsDefined++;
 				report_info("Definisano nabrajanje: " + enumDecl.getEnumBegin().getEnumName()  , enumDecl);
 			}
-		
+			
 		//	DEFINISANJE KONSTANTI	
 		private int numOfConstantsDefined = 0;
 			
 			// Ulancavanje konstanti
 			String constIdent = null;
-			public void visit(ConstExpr constExpr) {
+
+			public void visit(ConstExprNumber constExpr) {
 				// Proveri postojece ime u tabeli simbola
 				if(Tab.find(constExpr.getConstIdent()) != Tab.noObj) {
 					report_error("Visestruko definisanje simbola: " + constExpr.getConstIdent(), constExpr);
@@ -232,7 +233,29 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				Obj obj = new Obj(Obj.Con, constIdent, Tab.intType, constExpr.getConstValue(), 0);
 				Tab.currentScope().addToLocals(obj);
 			}
-			
+			public void visit(ConstExprBool constExpr) {
+				// Proveri postojece ime u tabeli simbola
+				if(Tab.find(constExpr.getConstIdent()) != Tab.noObj) {
+					report_error("Visestruko definisanje simbola: " + constExpr.getConstIdent(), constExpr);
+					errorDetected = true;
+					return;
+				}
+				constIdent = constExpr.getConstIdent();
+				Obj obj = new Obj(Obj.Con, constIdent, new Struct(Struct.Bool), constExpr.getConstValue() == true ? 1 : 0, 0);
+				Tab.currentScope().addToLocals(obj);
+			}
+			public void visit(ConstExprChar constExpr) {
+				// Proveri postojece ime u tabeli simbola
+				if(Tab.find(constExpr.getConstIdent()) != Tab.noObj) {
+					report_error("Visestruko definisanje simbola: " + constExpr.getConstIdent(), constExpr);
+					errorDetected = true;
+					return;
+				}
+				constIdent = constExpr.getConstIdent();
+				Obj obj = new Obj(Obj.Con, constIdent, Tab.charType, constExpr.getConstValue().charAt(1), 0);
+				Tab.currentScope().addToLocals(obj);
+			}
+
 			// Detektovanje definisane konstante
 			public void visit(ConstDecl constDecl) {
 				numOfConstantsDefined++;

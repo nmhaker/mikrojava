@@ -3,6 +3,7 @@ program MJProgram
 	char a, b;
 	int osobe[];
 	const int pi = 3, e = 2;
+	const char hash = '#';
 	enum Broj { NULA, JEDAN, TRI = 3, PET = 5 }
 	int xx[];
 {
@@ -16,7 +17,7 @@ program MJProgram
 		return xx[0] + a;
 	}
 	
-	void main(char idemoo) int i; int xy[]; {
+	void main(char idemoo) int x, novo; int i; int xy[]; {
 		
 		x = new int[Broj.PET];
 		x = new int[5];

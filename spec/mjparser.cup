@@ -48,10 +48,12 @@ scan with {:
 
 terminal PROG, ENUM, CONST, PRINT, READ, RETURN, NEW;
 terminal PLUS, MINUS, MUL, DIV, MOD, INC ,DEC, EQUAL;
-terminal DOT, SEMI, COMMA, LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET;
-terminal COMMENT, BOOL, STRING, VOID;
+terminal DOT, SEMI, COMMA, QUOT, LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET;
+terminal COMMENT, STRING, VOID;
 terminal String IDENT;
 terminal Integer NUMBER;
+terminal boolean BOOL;
+terminal String CHARCONST;
 
 nonterminal Statement, StatementList, DesignatorStatement, Designator;
 nonterminal SignedTerm, Expr, Term, Factor, Instantiation;
@@ -130,7 +132,10 @@ MethDecl ::= (MethDecl) MethBegin LPAREN ParameterList RPAREN VarDeclList LBRACE
 
 ArrayDecl ::= (ArrayDecl) IDENT:arrayName LBRACKET RBRACKET ;
 
-ConstExpr ::= (ConstExpr) IDENT:constIdent EQUAL NUMBER:constValue;
+ConstExpr ::= (ConstExprNumber) IDENT:constIdent EQUAL NUMBER:constValue
+			| (ConstExprBool) IDENT:constIdent EQUAL BOOL:constValue
+			| (ConstExprChar) IDENT:constIdent EQUAL CHARCONST:constValue
+			;
 
 ConstInitializationList ::= (MultipleConstExpr) ConstExpr COMMA ConstInitializationList
 						|   (SingleConstExpr) ConstExpr
