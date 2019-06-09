@@ -17,12 +17,12 @@ program MJProgram
 		return xx[0] + a;
 	}
 	
-	void main() bool prom; int x, novo; int i; Broj xy[]; {
+	void main() bool prom; Broj zaEnum; int x, novo; int i; Broj xy[]; {
 		
 		x = new int[Broj.PET];
 		x = new int[5];
 		
-		xy[3] = 5;
+		xy[3] = Broj.PET;
 		
 		read(a);
 		
@@ -30,10 +30,15 @@ program MJProgram
 	
 		x = xx;	
 		
+		zaEnum = x;
+		
+		zaEnum = Broj.NULA;
+		
+		x = Broj.JEDAN;
 		
 		x = y * xy[3] * i;
 		
-		i = xy[2];
+		zaEnum = xy[2];
 		
 		getValue(x);
 		

@@ -175,7 +175,7 @@ Statement ::=	(DesigStatement) DesignatorStatement SEMI
 		    ;
 
 ArgList ::= (ArgumentListProduction) ArgList COMMA Expr
-		| Expr
+		| (ArgumentListExprProduction) Expr
 		;
 		
 OptionalArgs ::= (OptionalArgsProduction) ArgList

@@ -197,6 +197,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 						}
 					}
 				}
+				// Set num of parameters in Obj node
+				methDecl.getMethBegin().obj.setLevel(numOfParameters);
 				methodBeingDefined = false;
 				numOfMethodsDefined++;
 				report_info("Deklarisana metoda: " + methTypeName +  " " + methName , methDecl);
@@ -338,10 +340,15 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		// Detekcija upotrebe promenljive 
 		private String usingVarName = null;
 		private Struct usingVarType = null;
+		private boolean leftSideIsEnum = false;
 		public void visit(VarUse varUse) {
 			MySTDump mystdump = new MySTDump();
 			usingVarName = varUse.getVarName();
 			usingVarType = Tab.find(usingVarName).getType();
+			if(usingVarType.getKind() == Struct.Enum) {
+				usingVarType = Tab.intType;
+				leftSideIsEnum = true;
+			}
 			mystdump.visitObjNode(Tab.find(varUse.getVarName()));
 			report_info("Detektovano koriscenje simbola: " + mystdump.getOutput() , varUse);
 		}
@@ -357,10 +364,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				report_error("Pokusavate da koristite promenljivu kao niz !", myArray);
 				errorDetected = true;
 			}else {
-				usingArrType = Tab.find(usingArrName).getType().getElemType();
+				usingArrType = usingArrType.getElemType();
 				if(exprType.getKind() != Struct.Int) {
 					report_error("Greska prilikom indeksiranja niza, konstanta nije Integer!" , myArray);
 					errorDetected = true;
+				}
+				if(usingArrType.getKind() == Struct.Enum) {
+					usingArrType = Tab.intType;
 				}
 			}
 			mystdump.visitObjNode(Tab.find(myArray.getArrName()));
@@ -405,6 +415,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				report_error("Designator nije kompatibilan sa Expr-om !", desStatAssignment);
 				errorDetected = true;
 			}
+			leftSideIsEnum = false;
 		}
 		
 		// readCall metoda ocekuje int/char/bool tip argumenta
@@ -441,6 +452,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		private Struct termType = null;
 		public void visit(FactorTerm factorTerm) {
 			termType = factorType;
+			if(leftSideIsEnum && !enumFactorUsed) {
+				report_error("Koristite ne nabrojivu konstantu u dodeli za enum", factorTerm);
+				errorDetected = true;
+			}
 		}
 		public void visit(MulopTerm mulopTerm) {
 			// Za proveru nizova koji su tipa int ( Int, Enum )
@@ -458,6 +473,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					report_error("Mnozenje sa non-Integer tipom", mulopTerm);
 					errorDetected = true;
 				}
+			}
+			if(leftSideIsEnum) {
+				report_error("Ne moze se koristiti izrazi u dodeli Enum-u, samo je dozvoljena nabrojiva konstanta njegovog tipa", mulopTerm);
+				errorDetected = true;
 			}
 		}
 		
@@ -532,9 +551,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			factorType = funcType;
 		}
 
+		private boolean enumFactorUsed = false;
 		@Override
 		public void visit(EnumUseFactor EnumUseFactor) {
 			factorType = Tab.intType;
+			enumFactorUsed = true;
 		}
 
 		@Override
