@@ -13,25 +13,34 @@ program MJProgram
 		return c1 + 2;
 	}
 	
-	bool checkValue(int a) int bbb; bool bb;{
+	int checkValue(int a) int bbb; bool bb;{
 		return xx[0] + a;
 	}
 	
-	void main() int x, novo; int i; int xy[]; {
+	void main() bool prom; int x, novo; int i; Broj xy[]; {
 		
 		x = new int[Broj.PET];
 		x = new int[5];
 		
 		xy[3] = 5;
 		
+		read(a);
+		
+		x[3] = 4;
+	
+		x = xx;	
+		
+		
+		x = y * xy[3] * i;
+		
 		i = xy[2];
 		
 		getValue(x);
 		
-		print(getValue(4));
+		print(k());
 		getValue(4);
 		
-		a = checkvalue(5);
+		prom = checkValue(5);
 		
 		read(i);
 		print(x[Broj.NULA]);

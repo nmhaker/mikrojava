@@ -50,7 +50,6 @@ import java_cup.runtime.*;
 "."	  { return new_symbol(sym.DOT, yytext()); }
 "="	  { return new_symbol(sym.EQUAL, yytext()); }
 ";"	  { return new_symbol(sym.SEMI, yytext()); }
-"'"   { return new_symbol(sym.QUOT, yytext()); }
 ","	  { return new_symbol(sym.COMMA, yytext()); }
 "("	  { return new_symbol(sym.LPAREN, yytext()); }
 ")"	  { return new_symbol(sym.RPAREN, yytext()); }
@@ -64,7 +63,6 @@ import java_cup.runtime.*;
 "true"|"false" { return new_symbol(sym.BOOL, Boolean.parseBoolean(yytext())); }
 [0-9]+	{ return new_symbol(sym.NUMBER, Integer.valueOf(yytext())); }
 ([a-z]|[A-Z])[a-z|A-Z|0-9|_]* 	{ return new_symbol (sym.IDENT, yytext()); }
-\"([a-z]|[A-Z])[a-z|A-Z|0-9|_]*\"  { return new_symbol(sym.STRING, yytext()); }
 "'".*"'" { return new_symbol(sym.CHARCONST, yytext()); }
 . { System.err.println("Leksicka greska ("+yytext()+") na liniji "+(yyline+1) + ", na poziciji " + yycolumn); }
 

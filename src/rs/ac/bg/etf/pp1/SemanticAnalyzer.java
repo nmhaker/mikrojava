@@ -1,10 +1,15 @@
 package rs.ac.bg.etf.pp1;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
 import org.apache.log4j.Logger;
 
 import rs.ac.bg.etf.pp1.ast.*;
 import rs.etf.pp1.symboltable.*;
 import rs.etf.pp1.symboltable.concepts.*;
+import rs.etf.pp1.symboltable.structure.SymbolDataStructure;
 
 public class SemanticAnalyzer extends VisitorAdaptor {
 
@@ -129,17 +134,21 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		private boolean methodBeingDefined = false;
 
 			// Zapamtimo tip kojim smo definisali metodu za kasnije
-			private String methType = null;
+			private Struct methType = null;
+			private String methTypeName = null;
 			public void visit(VoidMethType vmt) {
-				methType = currentTypeName = "void";
+				methTypeName = currentTypeName = "void";
+				methType = Tab.noType;
 				currentType = Tab.noType;
 			}
 			public void visit(NonVoidMethType nvmt){
-				methType = currentTypeName;
+				methTypeName = currentTypeName;
+				methType = currentType;
 			}
 			
 			private String methName = null;
 			public void visit(MethBegin methBegin) {
+				returnRegistered = false;
 				numOfParameters = 0;
 				methodBeingDefined = true;
 				methName = methBegin.getMethodName();
@@ -162,8 +171,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			public void visit(MethDecl methDecl) {
 				Tab.chainLocalSymbols(methDecl.getMethBegin().obj);
 				Tab.closeScope();
+				// Main method must be void, and 0 parameters
 				if(methName.equals("main")) {
-					if(!methType.equals("void")) {
+					if(!methTypeName.equals("void")) {
 						report_error("Metoda MAIN nije definisana kao VOID !", methDecl);
 						errorDetected = true;
 					}
@@ -173,9 +183,38 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					}
 					mainDefined = true;
 				}
+				// Expecting return statement
+				if(!methTypeName.equals("void")) {
+					if(!returnRegistered) {
+						report_error("Metoda "+methName+" ne sadrzi RETURN iskaz!", methDecl);
+						errorDetected = true;
+					}
+				}else { // VOID type method
+					if(returnRegistered) {
+						if(returnExprRegistered) {
+							report_error("Return iskaz vraca izraz u metodi tipa VOID ! ", methDecl);
+							errorDetected = true;
+						}
+					}
+				}
 				methodBeingDefined = false;
 				numOfMethodsDefined++;
-				report_info("Deklarisana metoda: " + methType +  " " + methName , methDecl);
+				report_info("Deklarisana metoda: " + methTypeName +  " " + methName , methDecl);
+			}
+			
+			// Detekcija RETURN iskaza
+			boolean returnRegistered = false;
+			public void visit(ReturnStatement retStmt) {
+				returnRegistered = true;
+			}
+			
+			boolean returnExprRegistered = false;
+			public void visit(OptionalExprProduction optExprProd) {
+				// Proveri tip povratne vrednosti da li se slaze sa return izrazom
+				if(!methType.equals(exprType)) {
+						report_error("Povratna vrednost metode se ne slaze sa return izrazom!", optExprProd);
+						errorDetected = true;
+				}
 			}
 			
 		// DEFINISANJE NIZOVA
@@ -193,7 +232,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 						errorDetected = true;
 						return;
 					}
-					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, Tab.intType));
+					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, currentType));
 					if(methName != null && methName.equals("main")) numOfLocalArraysDefined++;
 					report_info("Definisan lokalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
 				}else {
@@ -202,7 +241,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 						errorDetected = true;
 						return;
 					}
-					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, Tab.intType));
+					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, currentType));
 					numOfGlobalArraysDefined++;
 					report_info("Definisan globalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
 				}
@@ -217,8 +256,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				enumConstantValue = ecv.getEnumConstantValue();
 			}
 
+			List<Integer> queue = null;
 			// Ubacam simbolicku konstantu kao novi objektni cvor u strukturni cvor
 			public void visit(EnumExpr enumExpr) {
+				if(queue.contains(enumConstantValue)) report_error("Greska pri definisanju konstante enum-a, konstanta: " + enumConstantValue +" vec postoji !", enumExpr);
+				queue.add(enumConstantValue);
 				Obj constant = new Obj(Obj.Con, enumExpr.getEnumConstantName(), Tab.intType, enumConstantValue++, 0);
 				Tab.currentScope.addToLocals(constant);
 			}
@@ -230,9 +272,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					errorDetected = true;
 					return;
 				}
-				enumBegin.obj = new Obj(Obj.Con, enumBegin.getEnumName(), new Struct(Struct.Enum), -1, 0);
+				enumBegin.obj = new Obj(Obj.Type, enumBegin.getEnumName(), new Struct(Struct.Enum, Tab.intType), -1, 0);
 				Tab.currentScope.addToLocals(enumBegin.obj);
 				Tab.openScope();
+				queue = new LinkedList<Integer>();
 			}
 			
 			// Ulancavam simbolicke konstante 
@@ -293,20 +336,40 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			
 
 		// Detekcija upotrebe promenljive 
+		private String usingVarName = null;
+		private Struct usingVarType = null;
 		public void visit(VarUse varUse) {
 			MySTDump mystdump = new MySTDump();
+			usingVarName = varUse.getVarName();
+			usingVarType = Tab.find(usingVarName).getType();
 			mystdump.visitObjNode(Tab.find(varUse.getVarName()));
 			report_info("Detektovano koriscenje simbola: " + mystdump.getOutput() , varUse);
 		}
 			
 		// Detekcija upotrebe niza
+		private String usingArrName = null;
+		private Struct usingArrType = null;
 		public void visit(MyArray myArray) {
 			MySTDump mystdump = new MySTDump();
+			usingArrName = myArray.getArrName();
+			usingArrType = Tab.find(usingArrName).getType();
+			if(usingArrType.getKind() != Struct.Array) {
+				report_error("Pokusavate da koristite promenljivu kao niz !", myArray);
+				errorDetected = true;
+			}else {
+				usingArrType = Tab.find(usingArrName).getType().getElemType();
+				if(exprType.getKind() != Struct.Int) {
+					report_error("Greska prilikom indeksiranja niza, konstanta nije Integer!" , myArray);
+					errorDetected = true;
+				}
+			}
 			mystdump.visitObjNode(Tab.find(myArray.getArrName()));
 			report_info("Detektovano koriscenje simbola: " + mystdump.getOutput(), myArray );
 		}
 
 		// Detekcija upotreba Enum-a
+		private String usingEnumName = null;
+		private Struct usingEnumType = null;
 		public void visit(EnumUse enumUse) {
 			String enumName = enumUse.getEnumName();
 			String enumValue = enumUse.getEnumConst();
@@ -315,6 +378,200 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			report_info("Detektovano koriscenje simbola: " + enumValue + " iz: " + mystdump.getOutput(), enumUse);
 		}
 		
+	// SEMANTIKA ISKAZA
+		
+		// Provera ++ i -- operatora nad INT tipom
+		private Struct designatorType = null;
+		public void visit(IdentDesignator identDesignator) {
+			designatorType = usingVarType;
+		}
+		public void visit(MyArrayDesignator myArrayDesignator) {
+			designatorType = usingArrType;
+		}
+		public void visit(DesStatInc desStatInc) {
+			if(designatorType.getKind() != Struct.Int) {
+				report_error("Koristite ,,++,, operator nad non-Integer tipom", desStatInc);
+				errorDetected = true;
+			}
+		}
+		public void visit(DesStatDec desStatDec) {
+			if(designatorType.getKind() != Struct.Int) {
+				report_error("Koristite ,,--,, operator nad non-Integer tipom", desStatDec);
+				errorDetected = true;
+			}
+		}
+		public void visit(DesStatAssignment desStatAssignment) {
+			if(!designatorType.compatibleWith(exprType)) {
+				report_error("Designator nije kompatibilan sa Expr-om !", desStatAssignment);
+				errorDetected = true;
+			}
+		}
+		
+		// readCall metoda ocekuje int/char/bool tip argumenta
+		public void visit(ReadCall readCall) {
+			if( (designatorType.getKind() != Struct.Int) && 
+			   (designatorType.getKind() != Struct.Char) && 
+			   (designatorType.getKind() != Struct.Bool) ){
+				report_error("Argument readCall metode nije odgovarajuceg tipa; Podrzani su: int, char, bool", readCall);
+				errorDetected = true;
+			}
+			report_info("Detektovan poziv READ metode", readCall);
+		}
+		
+		// printCall metoda ocekuje int/char/bool Expr
+		public void visit(PrintCall printCall) {
+			if( (exprType.getKind() != Struct.Int) && 
+			   (exprType.getKind() != Struct.Char) && 
+			   (exprType.getKind() != Struct.Bool) ){
+				report_error("Argument printCall metode nije odgovarajuceg tipa; Podrzani su: int, char, bool", printCall);
+				errorDetected = true;
+			}
+			report_info("Detektovan poziv PRINT metode", printCall);
+		}
+		
+		// Obrada poziva funkcije
+		private Struct funcType = null;
+		public void visit(FuncCall funcCall) {
+			funcType = Tab.find(funcCall.getFuncName()).getType();
+			report_info("Detektovan poziv metode: " + funcCall.getFuncName(), funcCall);
+		}
+		
+		// Obrada TERM-a 
+		
+		private Struct termType = null;
+		public void visit(FactorTerm factorTerm) {
+			termType = factorType;
+		}
+		public void visit(MulopTerm mulopTerm) {
+			// Za proveru nizova koji su tipa int ( Int, Enum )
+			if(factorType.getKind() == Struct.Array) {
+				if(!factorType.getElemType().equals(Tab.intType) && !(factorType.getElemType().getKind() == Struct.Enum)) {
+					report_error("Mnozenje sa non-Integer tipom", mulopTerm);
+					errorDetected = true;
+				}
+			}else if(factorType.getKind() == Struct.Enum){
+				// Ovo je u redu jer su nabrojive konstante uvek tipa Integer
+				// Ali moram da ga izdvojim jer nije tip Int ali je u redu
+			}else {
+				// Za ostale slucajeve 
+				if(!factorType.equals(Tab.intType)) {
+					report_error("Mnozenje sa non-Integer tipom", mulopTerm);
+					errorDetected = true;
+				}
+			}
+		}
+		
+		public void visit(MinusTerm minusTerm) {
+			if(!termType.equals(Tab.intType)) {
+				report_error("Ne moze se koristiti ,,-,, za non-Integer tip", minusTerm);
+				errorDetected = true;
+			}
+		}
+		
+		
+		// Obrada EXPR-a
+		
+		private Struct exprType = null;
+		
+		public void visit(TermExpr termExpr) {
+			exprType = termType;
+		}
+		
+		public void visit(AddopExpr addopExpr) {
+			// Za proveru nizova koji su tipa int ( Int, Enum )
+			if(termType.getKind() == Struct.Array) {
+				if(!termType.getElemType().equals(Tab.intType) && !(termType.getElemType().getKind() == Struct.Enum)) {
+					report_error("Mnozenje sa non-Integer tipom", addopExpr);
+					errorDetected = true;
+				}
+			}else if(termType.getKind() == Struct.Enum){
+				// Ovo je u redu jer su nabrojive konstante uvek tipa Integer
+				// Ali moram da ga izdvojim jer nije tip Int ali je u redu
+			}else {
+				// Za ostale slucajeve 
+				if(!termType.equals(Tab.intType)) {
+					report_error("Mnozenje sa non-Integer tipom", addopExpr);
+					errorDetected = true;
+				}
+		}	
+	}
+		
+		// ADDOP , MULOP
+		
+		public void visit(PlusAddop plusAddop)
+		{
+//			report_info("PLUS ADDOP", plusAddop);
+		}
+		public void visit(MinusAddop minusAddop)
+		{
+//			report_info("MINUS ADDOP", minusAddop);
+		}
+		public void visit(MulMulop mulMulop) 
+		{
+//			report_info("MUL MULOP", mulMulop);
+		}
+		public void visit(DivMulop divMulop) 
+		{
+//			report_info("DIV MULOP", divMulop);
+		}
+		public void visit(ModMulop modMulop)
+		{
+//			report_info("MOD MULOP", modMulop);
+		}
+		
+	// POSTAVLJANJE TIPA FAKTORA
+
+		private Struct factorType = null;
+		@Override
+		public void visit(IdentFactor identFactor) {
+			factorType = usingVarType;
+		}
+		
+		@Override
+		public void visit(FuncCallFactor FuncCallFactor) {
+			factorType = funcType;
+		}
+
+		@Override
+		public void visit(EnumUseFactor EnumUseFactor) {
+			factorType = Tab.intType;
+		}
+
+		@Override
+		public void visit(ArrayFactor ArrayFactor) {
+			factorType = usingArrType;
+		}
+
+		public void visit(InstPrimitive instPrim) {
+			factorType = currentType;
+		}
+		
+		public void visit(InstArrayProduction instArrayProduction) {
+			if(exprType.getKind() != Struct.Int) {
+				report_error("Greska u instanciranju niza, konstanta za velicinu niza nije Integer! ", instArrayProduction);
+				errorDetected = true;
+			}
+		}
+
+		@Override
+		public void visit(BoolFactor BoolFactor) {
+			factorType = new Struct(Struct.Bool);
+		}
+
+		@Override
+		public void visit(CharFactor CharFactor) {
+			factorType = Tab.charType;
+		}
+
+		@Override
+		public void visit(NumberFactor NumberFactor) {
+			factorType = Tab.intType;
+		}
+		
+		public void visit(GroupFactor groupFactor) {
+			factorType = exprType;
+		}
+
 	// Syntax info getters
 	public int getNumOfGlobalVariables() {
 		return numOfGlobalVarsDefined;

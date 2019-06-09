@@ -48,8 +48,8 @@ scan with {:
 
 terminal PROG, ENUM, CONST, PRINT, READ, RETURN, NEW;
 terminal PLUS, MINUS, MUL, DIV, MOD, INC ,DEC, EQUAL;
-terminal DOT, SEMI, COMMA, QUOT, LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET;
-terminal COMMENT, STRING, VOID;
+terminal DOT, SEMI, COMMA, LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET;
+terminal COMMENT, VOID;
 terminal String IDENT;
 terminal Integer NUMBER;
 terminal boolean BOOL;
@@ -63,10 +63,10 @@ nonterminal Program, Type;
 nonterminal InstPrimitive, InstArray;
 nonterminal VarDeclList, MethDeclList, VarDecl, VarUse, MultipleVarDecl, MultipleVarDeclExpr, MethDecl, ArrayDecl,  EnumExpr, EnumExprList, EnumInst;
 nonterminal PrintStmt, PrintParam;
-nonterminal Return, FuncCall;
+nonterminal Return, OptionalExpr, FuncCall;
 nonterminal ConstExpr, ConstInitializationList, ConstDecl;
 nonterminal GlobalDeclList, GlobalDecl,  GlobalVarDecl;
-nonterminal ParameterList, Parameter, ArgList;
+nonterminal ParameterList, Parameter, ArgList, OptionalArgs;
 nonterminal Comment, MethType, EnumDecl;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, MethBegin;
@@ -108,7 +108,11 @@ MethDeclList ::= (MethDeclListProduction) MethDeclList MethDecl
             |   /* epsilon */
 			;
 
-Return ::=  (ReturnProduction) RETURN Expr SEMI
+OptionalExpr ::= (OptionalExprProduction) Expr 
+			 | /* epsilon */
+			 ;
+
+Return ::=  (ReturnProduction) RETURN OptionalExpr SEMI
 				;
 				
 Parameter ::= (ParameterVarProduction) Type IDENT:paramName
@@ -169,11 +173,16 @@ Statement ::=	(DesigStatement) DesignatorStatement SEMI
 		  	|   (ReturnStatement) Return
 		  	|   (CommentStatement) Comment
 		    ;
-ArgList ::= (ArgumentListProduction) COMMA ArgList
-		| /* epsilon */
+
+ArgList ::= (ArgumentListProduction) ArgList COMMA Expr
+		| Expr
 		;
-		    
-FuncCall  ::=  (FuncCallProduction)  IDENT:funcName LPAREN Expr ArgList RPAREN;
+		
+OptionalArgs ::= (OptionalArgsProduction) ArgList
+			 | 	/* epsilon */
+			 ;
+		
+FuncCall  ::=  (FuncCall)  IDENT:funcName LPAREN OptionalArgs RPAREN;
 
 DesignatorStatement ::=  (DesStatAssignment) Designator EQUAL Expr
 					  |  (DesStatAssignmentError) error:l {: parser.report_error("Izvrsen oporavak u naredbi dodele do prve ';' " , null); :}
@@ -181,20 +190,21 @@ DesignatorStatement ::=  (DesStatAssignment) Designator EQUAL Expr
 					  |	 (DesStatDec) Designator DEC
 					  ;
 
-SignedTerm ::= (MinusTerm) MINUS Term
-			|  (PlusTerm) Term
-			;							 
-Expr ::=(AddopExpr) SignedTerm Addop Term
+Expr ::=(AddopExpr) Expr Addop Term
 	 |  (TermExpr) SignedTerm
 	 ;
 
-Term ::=  (MulopTerm) Factor Mulop Factor
+SignedTerm ::= (MinusTerm) MINUS Term
+			|  (PlusTerm) Term
+			;							 
+
+Term ::=  (MulopTerm) Term Mulop Factor
 	 |  (FactorTerm) Factor
 	 ;
 
 Type ::=  (TypeProduction) IDENT:typeName;
 
-InstPrimitive ::= (InstPrimitiveProduction) NEW Type;
+InstPrimitive ::= (InstPrimitive) NEW Type;
 
 InstArray  	  ::= (InstArrayProduction) InstPrimitive LBRACKET Expr RBRACKET;
 
@@ -203,13 +213,13 @@ Instantiation ::= (InstPrimit) InstPrimitive
 		
 Factor ::= (IdentFactor) VarUse
 		 | (NumberFactor) NUMBER
-		 | (StringFactor) STRING
-		 | (GroupFactor) LPAREN Expr RPAREN
+		 | (CharFactor) CHARCONST
 		 | (BoolFactor) BOOL
 		 | (InstFactor) Instantiation
 		 | (ArrayFactor) MyArray
 		 | (EnumUseFactor) EnumUse
 		 | (FuncCallFactor) FuncCall
+		 | (GroupFactor) LPAREN Expr RPAREN
 		 ;
 		 
 VarUse ::= (VarUse) IDENT:varName;
