@@ -286,6 +286,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				Tab.closeScope();
 				numOfEnumerationsDefined++;
 				report_info("Definisano nabrajanje: " + enumDecl.getEnumBegin().getEnumName()  , enumDecl);
+				queue.clear();
+				enumConstantValue = 0;
 			}
 			
 		//	DEFINISANJE KONSTANTI	
@@ -353,17 +355,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				errorDetected = true;
 			}
 			usingVarType = varObj.getType();
-			if(identFactorPassed && leftSideIsEnum && (usingVarType.getKind() != Struct.Enum)) {
-				report_error("Ne moze se dodeljivati enum-u promenljiva bilo kog tipa osim Enum-a", varUse);
-				errorDetected = true;
-			}
-			if(identFactorPassed && leftSideIsEnum && (usingVarType.getKind() == Struct.Enum) && (!usingVarType.equals(leftEnumType)) ) {
-				report_error("Nekompatibilni enum tipovi pri dodeli u izrazu", varUse);
-				errorDetected = true;
-			}
-			if(usingVarType.getKind() == Struct.Enum) {
+			if(!isRightSideOfAssignment && (usingVarType.getKind() == Struct.Enum) ) {
 				leftSideIsEnum = true;
 				leftEnumType = usingVarType;
+			}else if(isRightSideOfAssignment && (usingVarType.getKind() == Struct.Enum)) {
+				rightEnumType = usingVarType;
+			}
+			if(usingVarType.getKind() == Struct.Enum) {
 				usingVarType = Tab.intType;
 			}
 			mystdump.visitObjNode(Tab.find(varUse.getVarName()));
@@ -386,16 +384,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					report_error("Greska prilikom indeksiranja niza, konstanta nije Integer!" , myArray);
 					errorDetected = true;
 				}
-				if(identFactorPassed && leftSideIsEnum && (usingArrType.getKind() != Struct.Enum)) {
-					report_error("Ne moze se dodeljivati enum-u promenljiva bilo kog tipa osim Enum-a", myArray);
-					errorDetected = true;
-				}
-				if(leftSideIsEnum && identFactorPassed && usingArrType.getKind() == Struct.Enum && !usingArrType.equals(leftEnumType)) {
-					report_error("Nekompatibilni enumi u naredbi dodele", myArray);
-					errorDetected = true;
+				if(!isRightSideOfAssignment && (usingArrType.getKind() == Struct.Enum)) {
+					leftEnumType = usingArrType;
+					leftSideIsEnum = true;
+				}else if(isRightSideOfAssignment && (usingArrType.getKind() == Struct.Enum)) {
+					rightEnumType = usingArrType;
 				}
 				if(usingArrType.getKind() == Struct.Enum) {
-					leftEnumType = usingArrType;
 					usingArrType = Tab.intType;
 				}
 			}
@@ -409,6 +404,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		public void visit(EnumUse enumUse) {
 			String enumName = enumUse.getEnumName();
 			String enumValue = enumUse.getEnumConst();
+			usingEnumName = enumName;
+			usingEnumType = Tab.find(enumName).getType();
 			MySTDump mystdump = new MySTDump();
 			mystdump.visitObjNode(Tab.find(enumName));
 			report_info("Detektovano koriscenje simbola: " + enumValue + " iz: " + mystdump.getOutput(), enumUse);
@@ -416,13 +413,16 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 	// SEMANTIKA ISKAZA
 		
+		private boolean isRightSideOfAssignment = false;
 		// Provera ++ i -- operatora nad INT tipom
 		private Struct designatorType = null;
 		public void visit(IdentDesignator identDesignator) {
 			designatorType = usingVarType;
+			isRightSideOfAssignment = true;
 		}
 		public void visit(MyArrayDesignator myArrayDesignator) {
 			designatorType = usingArrType;
+			isRightSideOfAssignment = true;
 		}
 		public void visit(DesStatInc desStatInc) {
 			if(designatorType.getKind() != Struct.Int) {
@@ -441,7 +441,16 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				report_error("Designator nije kompatibilan sa Expr-om !", desStatAssignment);
 				errorDetected = true;
 			}
+			if(leftSideIsEnum) {
+				if(!leftEnumType.equals(rightEnumType)) {
+					report_error("Designator enum-a nije kompatibilan sa Expr-om", desStatAssignment);
+					errorDetected = true;
+				}
+			}
 			leftSideIsEnum = false;
+			leftEnumType = null;
+			rightEnumType = null;
+			isRightSideOfAssignment = false;
 		}
 		
 		// readCall metoda ocekuje int/char/bool tip argumenta
@@ -579,51 +588,69 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			identFactorPassed = true;
 		}
 		
+		private boolean funcCallFactorPassed = false;
 		@Override
 		public void visit(FuncCallFactor FuncCallFactor) {
 			factorType = funcType;
+			funcCallFactorPassed = true;
 		}
 
+		private Struct rightEnumType = null;
 		private boolean enumFactorUsed = false;
 		@Override
 		public void visit(EnumUseFactor EnumUseFactor) {
 			factorType = Tab.intType;
+			rightEnumType = usingEnumType;
 			enumFactorUsed = true;
 		}
 
+		private boolean arrayFactorPassed = false;
 		@Override
 		public void visit(ArrayFactor ArrayFactor) {
 			factorType = usingArrType;
+			arrayFactorPassed  = true;
 		}
 
+		private boolean instPrimitiveFactorPassed = false;
 		public void visit(InstPrimitive instPrim) {
 			factorType = currentType;
+			instPrimitiveFactorPassed = true;
 		}
 		
+		private boolean instArrayProdFactorPassed = false;
 		public void visit(InstArrayProduction instArrayProduction) {
 			if(exprType.getKind() != Struct.Int) {
 				report_error("Greska u instanciranju niza, konstanta za velicinu niza nije Integer! ", instArrayProduction);
 				errorDetected = true;
 			}
+			instArrayProdFactorPassed = true;
 		}
 
+		private boolean boolFactorPassed = false;
 		@Override
 		public void visit(BoolFactor BoolFactor) {
 			factorType = new Struct(Struct.Bool);
+			boolFactorPassed = true;
 		}
 
+		private boolean charFactorPassed = false;
 		@Override
 		public void visit(CharFactor CharFactor) {
 			factorType = Tab.charType;
+			charFactorPassed = true;
 		}
 
+		private boolean numberFactorPassed = false;
 		@Override
 		public void visit(NumberFactor NumberFactor) {
 			factorType = Tab.intType;
+			numberFactorPassed = true;
 		}
 		
+		private boolean groupFactorPassed = false;
 		public void visit(GroupFactor groupFactor) {
 			factorType = exprType;
+			groupFactorPassed = true;
 		}
 
 	// Syntax info getters

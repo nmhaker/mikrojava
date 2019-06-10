@@ -20,25 +20,28 @@ program MJProgram
 	
 	void main() bool prom; Broj zaEnum, zaEnum2; int x, novo; int i; Broj2 xy[]; {
 		
-		x = new int[Broj.PET];
-		x = new int[5];
-		x = Broj.PET;
+		//x = new int[Broj.PET];
+		//x = new int[5];
+		//x = Broj.PET;
 		
-		x = Broj.PET + x;
-		x = Broj.PET + 3;
-		x = Broj.PET * 3;
+		//x = Broj.PET + x;
+		//x = Broj.PET + 3;
+		//x = Broj.PET * 3;
 		
-		zaEnum = 3;
-		zaEnum = x;
-		zaEnum = zaEnum2;
-		zaEnum = Broj.TRI;
-		zaEnum = xy[2];
-		zaEnum = xy[Broj.PET];
+		x = ((Broj.PET + 3) * a);
+		
+		//zaEnum = 3;
+		//zaEnum = x;
+		//zaEnum = zaEnum2;
+		//zaEnum = Broj.TRI;
+		//zaEnum = xy[2];
+		//zaEnum = xy[Broj.PET];
 
-		xy[3] = 2;
-		xy[3] = x;
-		xy[3] = Broj.PET;
-		xy[3] = zaEnum;
+		//xy[3] = 2;
+		//xy[3] = x;
+		//xy[3] = Broj.PET;
+		//xy[3] = zaEnum;
+		//xy[3] = xy[2];
 		
 		//read(a);
 		
