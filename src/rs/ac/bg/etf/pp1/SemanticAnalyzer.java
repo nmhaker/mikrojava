@@ -1,5 +1,7 @@
 package rs.ac.bg.etf.pp1;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -315,7 +317,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					return;
 				}
 				constIdent = constExpr.getConstIdent();
-				Obj obj = new Obj(Obj.Con, constIdent, new Struct(Struct.Bool), constExpr.getConstValue() == true ? 1 : 0, 0);
+				Obj obj = new Obj(Obj.Con, constIdent, Tab.find("bool").getType(), constExpr.getConstValue() == true ? 1 : 0, 0);
 				Tab.currentScope().addToLocals(obj);
 			}
 			public void visit(ConstExprChar constExpr) {
@@ -474,12 +476,42 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			}
 			report_info("Detektovan poziv PRINT metode", printCall);
 		}
+	
+		private int argCounter = 0;
+		private List<Struct> argTypes = new LinkedList<Struct>();
+		public void visit(ArgumentListExprProduction argListExprProd) {
+			prepareArg();
+		}
+		
+		public void visit(ArgumentListProduction argListProd) {
+			prepareArg();
+		}
+		public void prepareArg() {
+			argCounter++;
+			argTypes.add(exprType);
+		}
 		
 		// Obrada poziva funkcije
 		private Struct funcType = null;
 		public void visit(FuncCall funcCall) {
-			funcType = Tab.find(funcCall.getFuncName()).getType();
+		Obj funcObj = Tab.find(funcCall.getFuncName());
+			funcType = funcObj.getType();
 			report_info("Detektovan poziv metode: " + funcCall.getFuncName(), funcCall);
+			if(Tab.find(funcCall.getFuncName()).getLevel()!=argCounter) {
+				report_error("Broj argumenata se ne slaze sa definicijom metode", funcCall);
+				errorDetected = true;
+			}
+			Object[] paramIter =  funcObj.getLocalSymbols().toArray();
+			int i = 0;
+			for(Struct t : argTypes){
+				Obj o = (Obj)paramIter[i++];
+				if(!t.assignableTo(o.getType())){
+					report_error("Argument nije dodeljiv parametru , tipovi se ne slazu!", funcCall);
+					errorDetected = true;
+				}
+			}
+			argCounter = 0;
+			argTypes.clear();
 		}
 		
 		// Obrada TERM-a 
@@ -629,7 +661,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		private boolean boolFactorPassed = false;
 		@Override
 		public void visit(BoolFactor BoolFactor) {
-			factorType = new Struct(Struct.Bool);
+			factorType = Tab.find("bool").getType();
 			boolFactorPassed = true;
 		}
 

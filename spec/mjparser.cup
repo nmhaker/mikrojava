@@ -116,7 +116,7 @@ Return ::=  (ReturnProduction) RETURN OptionalExpr SEMI
 				;
 				
 Parameter ::= (ParameterVarProduction) Type IDENT:paramName
-			| (ParameterArrayProduction) ArrayDecl
+			| (ParameterArrayProduction)  Type ArrayDecl
 			;
 				
 ParameterList ::= (MultipleParameterListProduction) Parameter COMMA ParameterList

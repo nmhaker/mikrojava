@@ -4,21 +4,26 @@ program MJProgram
 	int osobe[];
 	const int pi = 3, e = 2;
 	const char hash = '#';
+	const bool POS = true;
 	enum Broj { NULA, JEDAN, TRI = 3, PET = 5 }
 	enum Broj2 { NULA, JEDAN, TRI = 3, PET = 5, SEST }
 	int xx[];
 {
 
-	int k() int c1; {
+	int k(char a, int b, bool c) int c1; {
 		c1 = 6;
 		return c1 + 2;
 	}
 	
+	int mojaMetoda(int param[]) {
+		return 2;	
+	}
+
 	int checkValue(int a) int bbb; bool bb;{
 		return xx[0] + a;
 	}
 	
-	void main() bool prom; Broj zaEnum, zaEnum2; int x, novo; int i; Broj2 xy[]; {
+	void main() bool prom; Broj zaEnum, zaEnum2;int niz[]; int x, novo; int i; Broj2 xy[]; {
 		
 		//x = new int[Broj.PET];
 		//x = new int[5];
@@ -28,7 +33,13 @@ program MJProgram
 		//x = Broj.PET + 3;
 		//x = Broj.PET * 3;
 		
-		x = ((Broj.PET + 3) * a);
+		//x = ((Broj.PET + 3) * a);
+		
+		x =  checkValue(niz[3]);
+		k('s', 5, true);
+		k(a, x, POS);
+		mojaMetoda(niz);
+		//mojaMetoda(x);
 		
 		//zaEnum = 3;
 		//zaEnum = x;
