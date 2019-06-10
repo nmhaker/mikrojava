@@ -49,7 +49,7 @@ scan with {:
 terminal PROG, ENUM, CONST, PRINT, READ, RETURN, NEW;
 terminal PLUS, MINUS, MUL, DIV, MOD, INC ,DEC, EQUAL;
 terminal DOT, SEMI, COMMA, LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET;
-terminal COMMENT, VOID;
+terminal VOID;
 terminal String IDENT;
 terminal Integer NUMBER;
 terminal boolean BOOL;
@@ -67,7 +67,7 @@ nonterminal Return, OptionalExpr, FuncCall;
 nonterminal ConstExpr, ConstInitializationList, ConstDecl;
 nonterminal GlobalDeclList, GlobalDecl,  GlobalVarDecl;
 nonterminal ParameterList, Parameter, ArgList, OptionalArgs;
-nonterminal Comment, MethType, EnumDecl;
+nonterminal MethType, EnumDecl;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, MethBegin;
 
@@ -171,7 +171,6 @@ Statement ::=	(DesigStatement) DesignatorStatement SEMI
 		  	|	(PrintCall) PrintStmt SEMI
 		  	|   (MethCall) FuncCall SEMI
 		  	|   (ReturnStatement) Return
-		  	|   (CommentStatement) Comment
 		    ;
 
 ArgList ::= (ArgumentListProduction) ArgList COMMA Expr
@@ -241,4 +240,3 @@ Mulop  ::= (MulMulop) MUL
 		|  (ModMulop) MOD
 		;
 			
-Comment ::= (Comment) COMMENT;

@@ -5,6 +5,7 @@ program MJProgram
 	const int pi = 3, e = 2;
 	const char hash = '#';
 	enum Broj { NULA, JEDAN, TRI = 3, PET = 5 }
+	enum Broj2 { NULA, JEDAN, TRI = 3, PET = 5, SEST }
 	int xx[];
 {
 
@@ -17,37 +18,52 @@ program MJProgram
 		return xx[0] + a;
 	}
 	
-	void main() bool prom; Broj zaEnum; int x, novo; int i; Broj xy[]; {
+	void main() bool prom; Broj zaEnum, zaEnum2; int x, novo; int i; Broj2 xy[]; {
 		
 		x = new int[Broj.PET];
 		x = new int[5];
+		x = Broj.PET;
 		
-		xy[3] = Broj.PET;
+		x = Broj.PET + x;
+		x = Broj.PET + 3;
+		x = Broj.PET * 3;
 		
-		read(a);
-		
-		x[3] = 4;
-	
-		x = xx;	
-		
+		zaEnum = 3;
 		zaEnum = x;
-		
-		zaEnum = Broj.NULA;
-		
-		x = Broj.JEDAN;
-		
-		x = y * xy[3] * i;
-		
+		zaEnum = zaEnum2;
+		zaEnum = Broj.TRI;
 		zaEnum = xy[2];
+		zaEnum = xy[Broj.PET];
+
+		xy[3] = 2;
+		xy[3] = x;
+		xy[3] = Broj.PET;
+		xy[3] = zaEnum;
 		
-		getValue(x);
+		//read(a);
 		
-		print(k());
-		getValue(4);
+		//x[3] = 4;
+	
+		//x = xx;	
 		
-		prom = checkValue(5);
+		//zaEnum = x;
 		
-		read(i);
-		print(x[Broj.NULA]);
+		//zaEnum = Broj.NULA;
+		
+		//x = Broj.JEDAN;
+		
+		//x = y * xy[3] * i;
+		
+		//zaEnum = xy[2];
+		
+		//getValue(x);
+		
+		//print(k());
+		//getValue(4);
+		
+		//prom = checkValue(5);
+		
+		//read(i);
+		//print(x[Broj.NULA]);
 	}
 }

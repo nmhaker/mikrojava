@@ -340,14 +340,31 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		// Detekcija upotrebe promenljive 
 		private String usingVarName = null;
 		private Struct usingVarType = null;
+
 		private boolean leftSideIsEnum = false;
+		private Struct leftEnumType = null;
+
 		public void visit(VarUse varUse) {
 			MySTDump mystdump = new MySTDump();
 			usingVarName = varUse.getVarName();
-			usingVarType = Tab.find(usingVarName).getType();
+			Obj varObj = Tab.find(usingVarName);
+			if(varObj == Tab.noObj) {
+				report_error("Nedefinisan simbol: " + usingVarName, varUse);
+				errorDetected = true;
+			}
+			usingVarType = varObj.getType();
+			if(identFactorPassed && leftSideIsEnum && (usingVarType.getKind() != Struct.Enum)) {
+				report_error("Ne moze se dodeljivati enum-u promenljiva bilo kog tipa osim Enum-a", varUse);
+				errorDetected = true;
+			}
+			if(identFactorPassed && leftSideIsEnum && (usingVarType.getKind() == Struct.Enum) && (!usingVarType.equals(leftEnumType)) ) {
+				report_error("Nekompatibilni enum tipovi pri dodeli u izrazu", varUse);
+				errorDetected = true;
+			}
 			if(usingVarType.getKind() == Struct.Enum) {
-				usingVarType = Tab.intType;
 				leftSideIsEnum = true;
+				leftEnumType = usingVarType;
+				usingVarType = Tab.intType;
 			}
 			mystdump.visitObjNode(Tab.find(varUse.getVarName()));
 			report_info("Detektovano koriscenje simbola: " + mystdump.getOutput() , varUse);
@@ -369,7 +386,16 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					report_error("Greska prilikom indeksiranja niza, konstanta nije Integer!" , myArray);
 					errorDetected = true;
 				}
+				if(identFactorPassed && leftSideIsEnum && (usingArrType.getKind() != Struct.Enum)) {
+					report_error("Ne moze se dodeljivati enum-u promenljiva bilo kog tipa osim Enum-a", myArray);
+					errorDetected = true;
+				}
+				if(leftSideIsEnum && identFactorPassed && usingArrType.getKind() == Struct.Enum && !usingArrType.equals(leftEnumType)) {
+					report_error("Nekompatibilni enumi u naredbi dodele", myArray);
+					errorDetected = true;
+				}
 				if(usingArrType.getKind() == Struct.Enum) {
+					leftEnumType = usingArrType;
 					usingArrType = Tab.intType;
 				}
 			}
@@ -460,7 +486,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		public void visit(MulopTerm mulopTerm) {
 			// Za proveru nizova koji su tipa int ( Int, Enum )
 			if(factorType.getKind() == Struct.Array) {
-				if(!factorType.getElemType().equals(Tab.intType) && !(factorType.getElemType().getKind() == Struct.Enum)) {
+				if( (!factorType.getElemType().equals(Tab.intType)) && (!(factorType.getElemType().getKind() == Struct.Enum))) {
 					report_error("Mnozenje sa non-Integer tipom", mulopTerm);
 					errorDetected = true;
 				}
@@ -475,7 +501,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				}
 			}
 			if(leftSideIsEnum) {
-				report_error("Ne moze se koristiti izrazi u dodeli Enum-u, samo je dozvoljena nabrojiva konstanta njegovog tipa", mulopTerm);
+				report_error("Ne mogu se koristiti izrazi u dodeli Enum-u, samo je dozvoljena nabrojiva konstanta njegovog tipa", mulopTerm);
 				errorDetected = true;
 			}
 		}
@@ -512,8 +538,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					report_error("Mnozenje sa non-Integer tipom", addopExpr);
 					errorDetected = true;
 				}
-		}	
-	}
+			}	
+			if(leftSideIsEnum) {
+				report_error("Ne mogu se koristiti izrazi za dodelu Enum-u", addopExpr);
+				errorDetected = true;
+			}
+		}
+		
 		
 		// ADDOP , MULOP
 		
@@ -541,9 +572,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	// POSTAVLJANJE TIPA FAKTORA
 
 		private Struct factorType = null;
+		private boolean identFactorPassed = false;
 		@Override
 		public void visit(IdentFactor identFactor) {
 			factorType = usingVarType;
+			identFactorPassed = true;
 		}
 		
 		@Override

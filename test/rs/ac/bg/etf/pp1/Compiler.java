@@ -114,7 +114,7 @@ public class Compiler {
 			
 			Program prog = (Program)(s.value);
 			Tab.init();
-			//log.info(prog.toString(""));
+			log.info(prog.toString(""));
 			log.info(" KRAJ TOKENIZACIJE \n ");
 			SemanticAnalyzer v = new SemanticAnalyzer();
 			prog.traverseBottomUp(v);
