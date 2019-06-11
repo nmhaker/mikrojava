@@ -655,6 +655,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				report_error("Greska u instanciranju niza, konstanta za velicinu niza nije Integer! ", instArrayProduction);
 				errorDetected = true;
 			}
+			factorType = new Struct(Struct.Array, currentType);
 			instArrayProdFactorPassed = true;
 		}
 

@@ -1,83 +1,22 @@
 program MJProgram
-	int x; int y;
-	char a, b;
-	int osobe[];
-	const int pi = 3, e = 2;
-	const char hash = '#';
-	const bool POS = true;
-	enum Broj { NULA, JEDAN, TRI = 3, PET = 5 }
-	enum Broj2 { NULA, JEDAN, TRI = 3, PET = 5, SEST }
-	int xx[];
+	int brojevi[];
 {
-
-	int k(char a, int b, bool c) int c1; {
-		c1 = 6;
-		return c1 + 2;
-	}
-	
-	int mojaMetoda(int param[]) {
-		return 2;	
+	int sqr(int x) {
+		return x * x;	
 	}
 
-	int checkValue(int a) int bbb; bool bb;{
-		return xx[0] + a;
-	}
-	
-	void main() bool prom; Broj zaEnum, zaEnum2;int niz[]; int x, novo; int i; Broj2 xy[]; {
+	void main() int size; {		
+		read(size);	
+		brojevi = new int[size];
 		
-		//x = new int[Broj.PET];
-		//x = new int[5];
-		//x = Broj.PET;
+		size = new char;
 		
-		//x = Broj.PET + x;
-		//x = Broj.PET + 3;
-		//x = Broj.PET * 3;
+		brojevi[0] = 1;
+		brojevi[0] = 2;
+		brojevi[0] = 3;
 		
-		//x = ((Broj.PET + 3) * a);
-		
-		x =  checkValue(niz[3]);
-		k('s', 5, true);
-		k(a, x, POS);
-		mojaMetoda(niz);
-		//mojaMetoda(x);
-		
-		//zaEnum = 3;
-		//zaEnum = x;
-		//zaEnum = zaEnum2;
-		//zaEnum = Broj.TRI;
-		//zaEnum = xy[2];
-		//zaEnum = xy[Broj.PET];
-
-		//xy[3] = 2;
-		//xy[3] = x;
-		//xy[3] = Broj.PET;
-		//xy[3] = zaEnum;
-		//xy[3] = xy[2];
-		
-		//read(a);
-		
-		//x[3] = 4;
-	
-		//x = xx;	
-		
-		//zaEnum = x;
-		
-		//zaEnum = Broj.NULA;
-		
-		//x = Broj.JEDAN;
-		
-		//x = y * xy[3] * i;
-		
-		//zaEnum = xy[2];
-		
-		//getValue(x);
-		
-		//print(k());
-		//getValue(4);
-		
-		//prom = checkValue(5);
-		
-		//read(i);
-		//print(x[Broj.NULA]);
+		print(sqr(brojevi[0]));
+		print(sqr(brojevi[1]));
+		print(sqr(brojevi[2]));
 	}
 }
