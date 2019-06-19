@@ -366,6 +366,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			if(usingVarType.getKind() == Struct.Enum) {
 				usingVarType = Tab.intType;
 			}
+			varUse.obj = varObj;
 			mystdump.visitObjNode(Tab.find(varUse.getVarName()));
 			report_info("Detektovano koriscenje simbola: " + mystdump.getOutput() , varUse);
 		}
@@ -420,10 +421,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		private Struct designatorType = null;
 		public void visit(IdentDesignator identDesignator) {
 			designatorType = usingVarType;
+			identDesignator.obj = Tab.find(usingVarName);
 			isRightSideOfAssignment = true;
 		}
 		public void visit(MyArrayDesignator myArrayDesignator) {
 			designatorType = usingArrType;
+			myArrayDesignator.obj = Tab.find(usingArrName);
 			isRightSideOfAssignment = true;
 		}
 		public void visit(DesStatInc desStatInc) {
@@ -565,6 +568,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 		public void visit(TermExpr termExpr) {
 			exprType = termType;
+			termExpr.struct = exprType;
 		}
 		
 		public void visit(AddopExpr addopExpr) {

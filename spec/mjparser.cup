@@ -55,13 +55,13 @@ terminal Integer NUMBER;
 terminal boolean BOOL;
 terminal String CHARCONST;
 
-nonterminal Statement, StatementList, DesignatorStatement, Designator;
-nonterminal SignedTerm, Expr, Term, Factor, Instantiation;
+nonterminal Statement, StatementList, DesignatorStatement;
+nonterminal SignedTerm, Factor, Instantiation;
 nonterminal Addop, Mulop;
-nonterminal MyArray, EnumUse;
+nonterminal EnumUse;
 nonterminal Program, Type;
 nonterminal InstPrimitive, InstArray;
-nonterminal VarDeclList, MethDeclList, VarDecl, VarUse, MultipleVarDecl, MultipleVarDeclExpr, MethDecl, ArrayDecl,  EnumExpr, EnumExprList, EnumInst;
+nonterminal VarDeclList, MethDeclList, VarDecl, MultipleVarDecl, MultipleVarDeclExpr, MethDecl, ArrayDecl,  EnumExpr, EnumExprList, EnumInst;
 nonterminal PrintStmt, PrintParam;
 nonterminal Return, OptionalExpr, FuncCall;
 nonterminal ConstExpr, ConstInitializationList, ConstDecl;
@@ -70,6 +70,9 @@ nonterminal ParameterList, Parameter, ArgList, OptionalArgs;
 nonterminal MethType, EnumDecl;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, MethBegin;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj VarUse, MyArray, Designator;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Term;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Expr;
 
 Program   ::= (Program) PROG ProgName:progName GlobalDeclList LBRACE MethDeclList RBRACE;
 
@@ -163,7 +166,7 @@ StatementList ::= (StatementListProduction) StatementList Statement
 PrintParam ::= (PrintParamProduction) COMMA NUMBER
 			|   /* epsilon */
 			;
-PrintStmt ::=  (PrintStmtProduction) PRINT LPAREN Expr PrintParam RPAREN 
+PrintStmt ::=  (PrintStmtProduction) PRINT LPAREN Expr:printExpr PrintParam RPAREN 
 			;
 
 Statement ::=	(DesigStatement) DesignatorStatement SEMI
