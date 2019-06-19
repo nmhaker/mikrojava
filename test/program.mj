@@ -9,14 +9,16 @@ program MJProgram
 		read(size);	
 		brojevi = new int[size];
 		
-		size = new char;
+		size = new int;
 		
 		brojevi[0] = 1;
 		brojevi[0] = 2;
 		brojevi[0] = 3;
 		
+		
 		print(sqr(brojevi[0]));
 		print(sqr(brojevi[1]));
 		print(sqr(brojevi[2]));
 	}
+	
 }

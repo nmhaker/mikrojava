@@ -497,6 +497,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Obj funcObj = Tab.find(funcCall.getFuncName());
 			funcType = funcObj.getType();
 			report_info("Detektovan poziv metode: " + funcCall.getFuncName(), funcCall);
+			if(Tab.find(funcCall.getFuncName()) == Tab.noObj){
+				report_error("Ne postoji definisana metoda: ", funcCall);
+				errorDetected = true;
+			}
 			if(Tab.find(funcCall.getFuncName()).getLevel()!=argCounter) {
 				report_error("Broj argumenata se ne slaze sa definicijom metode", funcCall);
 				errorDetected = true;
