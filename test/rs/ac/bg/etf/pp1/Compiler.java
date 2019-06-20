@@ -104,6 +104,7 @@ public class Compiler {
 		final int numOfFiles = 1;
 		File sourceCode[] = new File[numOfFiles];
 		sourceCode[0] = new File("test/program.mj");
+	//	sourceCode[0] = new File("test/ziza_test.mj");
 		int i = 0;
 		while(i < numOfFiles) {
 			log.info("Compiling source file: "+sourceCode[i].getAbsolutePath());

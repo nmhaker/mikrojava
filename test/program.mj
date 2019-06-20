@@ -1,34 +1,16 @@
 program MJProgram
-	int brojevi[];
-	
-	int x;
-	
-	enum Nabrajanje { PRVI , DRUGI }
 	
 {
-	int sqr(int x) int y; {
-		print(x);
-		return x * x;	
+
+	int inc(int x) {
+		x++;
+		return x;	
 	}
 
-	void main() int size; Nabrajanje n1; {		
-		read(size);	
-		brojevi = new int[size];
+	void main()  {		
 		
-		size = new int;
-		
-		x = Nabrajanje.PRVI;
-		
-		read(x);
-		
-		brojevi[7] = 1;
-		brojevi[8] = 2;
-		brojevi[9] = 3;
-		
-		
-		print(sqr(brojevi[4]));
-		print(sqr(brojevi[5]));
-		print(sqr(brojevi[6]));
+		print(5);
+		print(inc(5));
 	}
 	
 }

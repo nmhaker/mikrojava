@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Stack;
 
 import org.apache.log4j.Logger;
 
@@ -358,8 +359,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			}
 			usingVarType = varObj.getType();
 			if(!isRightSideOfAssignment && (usingVarType.getKind() == Struct.Enum) ) {
-				leftSideIsEnum = true;
-				leftEnumType = usingVarType;
+				//if(!leftSideIsEnum) {
+					leftSideIsEnum = true;
+					leftEnumType = usingVarType;
+				//}
 			}else if(isRightSideOfAssignment && (usingVarType.getKind() == Struct.Enum)) {
 				rightEnumType = usingVarType;
 			}
@@ -392,7 +395,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					leftSideIsEnum = true;
 				}else if(isRightSideOfAssignment && (usingArrType.getKind() == Struct.Enum)) {
 					rightEnumType = usingArrType;
-				}
+				}else
+					leftSideIsEnum = false;
 				if(usingArrType.getKind() == Struct.Enum) {
 					usingArrType = Tab.intType;
 				}
@@ -480,8 +484,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			report_info("Detektovan poziv PRINT metode", printCall);
 		}
 	
-		private int argCounter = 0;
+		private Integer argCounter = 0;
+		private Stack<Integer> argCounterStack = new Stack<Integer>();
 		private List<Struct> argTypes = new LinkedList<Struct>();
+		private Stack<List<Struct>> argTypesStack = new Stack<List<Struct>>();
+		
 		public void visit(ArgumentListExprProduction argListExprProd) {
 			prepareArg();
 		}
@@ -490,26 +497,36 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			prepareArg();
 		}
 		public void prepareArg() {
-			argCounter++;
+			argCounter = argCounterStack.pop();
+			argCounter = argCounter + 1;
+			argCounterStack.push(argCounter);
+			argTypes = argTypesStack.pop();
 			argTypes.add(exprType);
+			argTypesStack.push(argTypes);
 		}
 		
 		// Obrada poziva funkcije
 		private Struct funcType = null;
+		private String funcName = null;
+		
+		private Stack<String> funcNameStack = new Stack<String>();
 		public void visit(FuncCall funcCall) {
-		Obj funcObj = Tab.find(funcCall.getFuncName());
+			funcName = funcNameStack.pop();
+			Obj funcObj = Tab.find(funcName);
 			funcType = funcObj.getType();
-			report_info("Detektovan poziv metode: " + funcCall.getFuncName(), funcCall);
-			if(Tab.find(funcCall.getFuncName()) == Tab.noObj){
+			report_info("Detektovan poziv metode: " + funcName, funcCall);
+			if(Tab.find(funcName) == Tab.noObj){
 				report_error("Ne postoji definisana metoda: ", funcCall);
 				errorDetected = true;
 			}
-			if(Tab.find(funcCall.getFuncName()).getLevel()!=argCounter) {
+			argCounter = argCounterStack.pop();
+			if(Tab.find(funcName).getLevel()!=argCounter) {
 				report_error("Broj argumenata se ne slaze sa definicijom metode", funcCall);
 				errorDetected = true;
 			}
 			Object[] paramIter =  funcObj.getLocalSymbols().toArray();
 			int i = 0;
+			argTypes = argTypesStack.pop();
 			for(Struct t : argTypes){
 				Obj o = (Obj)paramIter[i++];
 				if(!t.assignableTo(o.getType())){
@@ -517,8 +534,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					errorDetected = true;
 				}
 			}
-			argCounter = 0;
-			argTypes.clear();
+		}
+		
+		public void visit(FuncCallName funcCallName) {
+			funcName = funcCallName.getFuncName();
+			funcNameStack.push(funcName);
+			argCounterStack.push(new Integer(0));
+			argTypesStack.push(new LinkedList<Struct>());
 		}
 		
 		// Obrada TERM-a 
@@ -548,7 +570,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					errorDetected = true;
 				}
 			}
-			if(leftSideIsEnum) {
+			if(leftSideIsEnum && isRightSideOfAssignment) {
 				report_error("Ne mogu se koristiti izrazi u dodeli Enum-u, samo je dozvoljena nabrojiva konstanta njegovog tipa", mulopTerm);
 				errorDetected = true;
 			}

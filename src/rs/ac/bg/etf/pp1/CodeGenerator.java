@@ -4,6 +4,7 @@ import rs.ac.bg.etf.pp1.ast.BoolFactor;
 import rs.ac.bg.etf.pp1.ast.CharFactor;
 import rs.ac.bg.etf.pp1.ast.Designator;
 import rs.ac.bg.etf.pp1.ast.FuncCall;
+import rs.ac.bg.etf.pp1.ast.FuncCallName;
 import rs.ac.bg.etf.pp1.ast.IdentDesignator;
 import rs.ac.bg.etf.pp1.ast.MethBegin;
 import rs.ac.bg.etf.pp1.ast.MethDecl;
@@ -74,7 +75,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(CharFactor charFactor) {
-		Code.loadConst(Integer.parseInt(charFactor.getC1()));
+		Code.loadConst(charFactor.getC1().charAt(0));
 	}
 	
 	public void visit(BoolFactor boolFactor) {
@@ -96,9 +97,14 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(Code.return_);
 	}
 	
+	private String funcName = null;
+	public void visit(FuncCallName funcCallName) {
+		funcName = funcCallName.getFuncName();
+	}
+	
 	public void visit(FuncCall funcCall) {
 		Code.put(Code.call);
-		Code.put(Tab.find(funcCall.getFuncName()).getAdr() - Code.pc);
+		Code.put(Tab.find(funcName).getAdr() - Code.pc);
 	}
 	
 }
