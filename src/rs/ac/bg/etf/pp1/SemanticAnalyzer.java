@@ -122,6 +122,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				}else {
 					if(Tab.find(varName) == Tab.noObj) {
 						Tab.insert(Obj.Var, varName, currentType);
+						Tab.find(varName).setAdr(numOfGlobalVarsDefined+numOfGlobalArraysDefined);
 						numOfGlobalVarsDefined++;
 						report_info("Definisana globalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
 					}else {
@@ -163,11 +164,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			
 			public void visit(ParameterVarProduction paramVarProd) {
 				Tab.insert(Obj.Var, paramVarProd.getParamName(), currentType);
+				Tab.find(paramVarProd.getParamName()).setAdr(numOfParameters);
 				numOfParameters++;
 			}
 
 			public void visit(ParameterArrayProduction paramArrayProd) {
 				Tab.insert(Obj.Var, declaredArrayName, currentType);
+				Tab.find(declaredArrayName).setAdr(numOfParameters);
 				numOfParameters++;
 			}
 		
@@ -237,7 +240,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 						errorDetected = true;
 						return;
 					}
-					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, currentType));
+					//Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, currentType));
+					Tab.insert(Obj.Elem, arrName, new Struct(Struct.Array, currentType));
 					if(methName != null && methName.equals("main")) numOfLocalArraysDefined++;
 					report_info("Definisan lokalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
 				}else {
@@ -246,7 +250,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 						errorDetected = true;
 						return;
 					}
-					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, currentType));
+					//Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, currentType));
+					Tab.insert(Obj.Elem, arrName, new Struct(Struct.Array, currentType));
+					Tab.find(arrName).setAdr(numOfGlobalArraysDefined+numOfGlobalVarsDefined);
 					numOfGlobalArraysDefined++;
 					report_info("Definisan globalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
 				}
@@ -379,7 +385,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		private Struct usingArrType = null;
 		public void visit(MyArray myArray) {
 			MySTDump mystdump = new MySTDump();
-			usingArrName = myArray.getArrName();
+			usingArrName = myArray.getMyArrayName().getArrName();
 			usingArrType = Tab.find(usingArrName).getType();
 			if(usingArrType.getKind() != Struct.Array) {
 				report_error("Pokusavate da koristite promenljivu kao niz !", myArray);
@@ -401,8 +407,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					usingArrType = Tab.intType;
 				}
 			}
-			mystdump.visitObjNode(Tab.find(myArray.getArrName()));
+			myArray.obj = Tab.find(myArray.getMyArrayName().getArrName());
+			mystdump.visitObjNode(Tab.find(myArray.getMyArrayName().getArrName()));
 			report_info("Detektovano koriscenje simbola: " + mystdump.getOutput(), myArray );
+		}
+		
+		public void visit(MyArrayName myArrayName) {
+			myArrayName.obj = Tab.find(myArrayName.getArrName());
 		}
 
 		// Detekcija upotreba Enum-a
@@ -413,6 +424,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			String enumValue = enumUse.getEnumConst();
 			usingEnumName = enumName;
 			usingEnumType = Tab.find(enumName).getType();
+			enumUse.obj = Tab.find(enumName).getType().getMembersTable().searchKey(enumValue);
 			MySTDump mystdump = new MySTDump();
 			mystdump.visitObjNode(Tab.find(enumName));
 			report_info("Detektovano koriscenje simbola: " + enumValue + " iz: " + mystdump.getOutput(), enumUse);
@@ -534,6 +546,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					errorDetected = true;
 				}
 			}
+			funcCall.obj = funcObj;
 		}
 		
 		public void visit(FuncCallName funcCallName) {
@@ -614,6 +627,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				report_error("Ne mogu se koristiti izrazi za dodelu Enum-u", addopExpr);
 				errorDetected = true;
 			}
+			addopExpr.struct = termType;
 		}
 		
 		

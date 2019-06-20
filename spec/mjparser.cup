@@ -58,21 +58,22 @@ terminal String CHARCONST;
 nonterminal Statement, StatementList, DesignatorStatement;
 nonterminal SignedTerm, Factor, Instantiation;
 nonterminal Addop, Mulop;
-nonterminal EnumUse;
 nonterminal Program, Type;
 nonterminal InstPrimitive, InstArray;
 nonterminal VarDeclList, MethDeclList, VarDecl, MultipleVarDecl, MultipleVarDeclExpr, MethDecl, ArrayDecl,  EnumExpr, EnumExprList, EnumInst;
 nonterminal PrintStmt, PrintParam;
-nonterminal Return, OptionalExpr, FuncCall;
+nonterminal Return, OptionalExpr;
 nonterminal ConstExpr, ConstInitializationList, ConstDecl;
 nonterminal GlobalDeclList, GlobalDecl,  GlobalVarDecl;
 nonterminal ParameterList, Parameter, ArgList, OptionalArgs;
 nonterminal MethType, EnumDecl, FuncCallName;
 
-nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, MethBegin;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, EnumUse, MethBegin;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj VarUse, MyArray, Designator;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Term;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj FuncCall;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Expr;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj MyArrayName;
 
 Program   ::= (Program) PROG ProgName:progName GlobalDeclList LBRACE MethDeclList RBRACE;
 
@@ -212,8 +213,7 @@ InstPrimitive ::= (InstPrimitive) NEW Type;
 
 InstArray  	  ::= (InstArrayProduction) InstPrimitive LBRACKET Expr RBRACKET;
 
-Instantiation ::= (InstPrimit) InstPrimitive
-			    | (InstArr) InstArray;
+Instantiation ::= (InstArr) InstArray;
 		
 Factor ::= (IdentFactor) VarUse
 		 | (NumberFactor) NUMBER
@@ -228,7 +228,9 @@ Factor ::= (IdentFactor) VarUse
 		 
 VarUse ::= (VarUse) IDENT:varName;
 		
-MyArray  ::= (MyArray) IDENT:arrName LBRACKET Expr RBRACKET;		
+MyArrayName ::= (MyArrayName) IDENT:arrName LBRACKET;
+
+MyArray  ::= (MyArray) MyArrayName Expr RBRACKET;		
 
 EnumUse   ::= (EnumUse) IDENT:enumName DOT IDENT:enumConst;
 		
