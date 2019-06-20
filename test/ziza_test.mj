@@ -9,6 +9,7 @@ program test301
 	
 	int niz[];
 	char nizch[];
+	int mojNiz[];
 	
 {
 
@@ -38,6 +39,7 @@ program test301
 		print(bodovi);
 		
 		niz = new int[2];
+		mojNiz = new int[3];
 		niz[nula] = pet;
 		niz[1] = Broj.DESET;
 		mul(niz, inc(0), 2);
@@ -56,7 +58,7 @@ program test301
 		bodovi = bodovi + ((pet * jedan - 1) * inc(Broj.JEDAN) - (3 % 2 + 3*2 - 3) - inc(Broj.NULA) * 0);
 		print(bodovi);
 		
-		read(bodovi);
+		//read(bodovi);
 		bodovi = inc(bodovi);
 		print(bodovi);
 		

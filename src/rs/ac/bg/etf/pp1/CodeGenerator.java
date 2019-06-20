@@ -112,7 +112,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(CharFactor charFactor) {
-		Code.loadConst(charFactor.getC1().charAt(0));
+		Code.loadConst(charFactor.getC1().charAt(1));
 	}
 	
 	public void visit(BoolFactor boolFactor) {
@@ -217,9 +217,9 @@ public class CodeGenerator extends VisitorAdaptor {
 	private boolean instantiationHappened = false;
 	public void visit(InstArrayProduction instArrayProduction) {
 		Code.put(Code.newarray);
-		if(myArrayType == Tab.intType)
+		if(instArrayProduction.struct.getElemType().getKind() == Struct.Int)
 			Code.put(1);
-		else if(myArrayType == Tab.charType)
+		else if(instArrayProduction.struct.getElemType().getKind() == Struct.Char)
 			Code.put(0);
 		else
 			Code.put(1);

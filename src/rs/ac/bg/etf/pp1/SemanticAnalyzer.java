@@ -700,6 +700,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				errorDetected = true;
 			}
 			factorType = new Struct(Struct.Array, currentType);
+			instArrayProduction.struct = factorType;
 			instArrayProdFactorPassed = true;
 		}
 

@@ -59,7 +59,7 @@ nonterminal Statement, StatementList, DesignatorStatement;
 nonterminal SignedTerm, Factor, Instantiation;
 nonterminal Addop, Mulop;
 nonterminal Program, Type;
-nonterminal InstPrimitive, InstArray;
+nonterminal InstPrimitive;
 nonterminal VarDeclList, MethDeclList, VarDecl, MultipleVarDecl, MultipleVarDeclExpr, MethDecl, ArrayDecl,  EnumExpr, EnumExprList, EnumInst;
 nonterminal PrintStmt, PrintParam;
 nonterminal Return, OptionalExpr;
@@ -72,8 +72,8 @@ nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, EnumUse, Me
 nonterminal rs.etf.pp1.symboltable.concepts.Obj VarUse, MyArray, Designator;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Term;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj FuncCall;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Expr;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj MyArrayName;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Expr, InstArray;
 
 Program   ::= (Program) PROG ProgName:progName GlobalDeclList LBRACE MethDeclList RBRACE;
 
