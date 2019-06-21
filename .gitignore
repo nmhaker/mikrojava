@@ -2,6 +2,7 @@ lib/
 bin/
 logs/
 *.class
+*.obj
 src/rs/ac/bg/etf/pp1/ast/*
 spec/mjparser_astbuild.cup
 src/rs/ac/bg/etf/pp1/Yylex.java~

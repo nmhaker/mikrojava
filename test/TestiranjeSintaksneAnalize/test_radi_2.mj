@@ -1,0 +1,42 @@
+// testiranje definicije globalne promenljive
+
+program testiranje
+	
+	int a;
+	int b, c;
+	char niz[];
+	const int const_jedan = 1;
+	const int const_dva = 2;
+	const int const_tri = 3;
+
+{	
+	void main() int x; {
+		a = 5;
+		b = 5 + 1;
+		c = a + b;
+		
+		niz = new char[3];
+		niz[const_jedan-1] = 'a';
+		niz[const_dva-1] = 'b';
+		niz[const_tri-1] = 'c';
+		
+		print('a');
+		print('=');
+		print(' ');
+		print(a);
+		print(' ');
+		print('b');
+		print('=');
+		print(' ');
+		print(b);
+		print(' ');
+		print('c');
+		print('=');
+		print(' ');
+		print(c);
+		print(' ');
+		print(niz[const_jedan - 1]);
+		print(niz[const_dva - 1]);
+		print(niz[const_tri - 1]);
+	}
+}

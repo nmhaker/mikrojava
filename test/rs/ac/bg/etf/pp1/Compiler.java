@@ -25,49 +25,23 @@ public class Compiler {
 	
 	public static void testirajSintaksnuAnalizu(Logger log, Reader br) throws Exception {
 
-			final int numOfFiles = 1;
-			File sourceCode[] = new File[numOfFiles];
-			sourceCode[0] = new File("test/TestiranjeSintaksneAnaliza/Test1.mj");
-			
-			int i = 0;
-			while(i < numOfFiles) {
-				log.info("Compiling source file: "+sourceCode[i].getAbsolutePath());
-				
-				br = new BufferedReader(new FileReader(sourceCode[i]));
-				Yylex lexer = new Yylex(br);
-				
-				MJParser p = new MJParser(lexer);
-				Symbol s = p.parse();
-				
-				Program prog = (Program)(s.value);
-				Tab.init();
-				log.info(prog.toString(""));
-				log.info("====================");
-				
-				SemanticAnalyzer v = new SemanticAnalyzer();
-				prog.traverseBottomUp(v);
-				
-				
-				log.info("====================");
-				tsdump();
-				
-				if(!p.errorDetected && v.passed()) {
-					log.info("Parsiranje uspesno zavrseno!");
-				}else {
-					log.error("Parsiranje nije uspesno zavrseno!");
-				}
-				
-				i++;
-			}
-	}
-	
-	public static void testirajSemantickuAnalizu(Logger log, Reader br) throws Exception {
-
-		final int numOfFiles = 1;
-		File sourceCode[] = new File[numOfFiles];
-		sourceCode[0] = new File("test/TestiranjeSemantickeAnalize/Test1.mj");
+		final int numOfFiles = 4;
 		
+		String path = "test/TestiranjeSintaksneAnalize/";
+		String fajlovi[] = new String[numOfFiles];
+		fajlovi[0] = "test_radi_1";
+		fajlovi[1] = "test_radi_2";
+		fajlovi[2] = "test_ne_radi_1";
+		fajlovi[3] = "test_ne_radi_2";
+
+		File sourceCode[] = new File[numOfFiles];
 		int i = 0;
+		for(String fajl : fajlovi) {
+			sourceCode[i] = new File(path + fajlovi[i] + ".mj");
+			i++;
+		}
+
+		i = 0;
 		while(i < numOfFiles) {
 			log.info("Compiling source file: "+sourceCode[i].getAbsolutePath());
 			
@@ -76,36 +50,69 @@ public class Compiler {
 			
 			MJParser p = new MJParser(lexer);
 			Symbol s = p.parse();
+
+			log.info("\n ========== KRAJ TOKENIZACIJE ========== \n ");
 			
 			Program prog = (Program)(s.value);
-			Tab.init();
-			log.info(prog.toString(""));
-			log.info("====================");
+
 			
-			SemanticAnalyzer v = new SemanticAnalyzer();
-			prog.traverseBottomUp(v);
-			
-			
-			log.info("====================");
-			tsdump();
-			
-			if(!p.errorDetected && v.passed()) {
-				log.info("Parsiranje uspesno zavrseno!");
-			}else {
-				log.error("Parsiranje nije uspesno zavrseno!");
+
+			if(!p.errorDetected) {
+
+				log.info("\n ========= SINTAKSNO STABLO ========= \n");
+
+				log.info(prog.toString(""));
+
+				log.info("\n ========== SEMANTICKA ANALIZA ========== \n");
+				Tab.init();
+				SemanticAnalyzer v = new SemanticAnalyzer();
+				prog.traverseBottomUp(v);
+				
+				log.info(" ========== KRAJ PARSIRANJA =========== \n");
+				
+				syntaxInfo(v);
+				
+				tsdump(); if(!p.errorDetected && v.passed()) {
+					File objFile = new File("test/sintaksna_" + fajlovi[i] + ".obj");
+					if(objFile.exists()) objFile.delete();
+					
+					CodeGenerator codeGenerator = new CodeGenerator();
+					prog.traverseBottomUp(codeGenerator);
+					Code.dataSize = v.getNumOfConstants() + v.getNumOfGlobalArrays() + v.getNumOfGlobalVariables();
+					Code.mainPc = codeGenerator.getMainPc();
+					Code.write(new FileOutputStream(objFile));
+					log.info("Parsiranje USPESNO zavrseno!");
+					resetCodeClass();
+				}else {
+					log.error("Parsiranje NEUSPESNO zavrseno!");
+				}
+				
+
 			}
-			
 			i++;
-		}
+		}	
+	}
+	
+	public static void testirajSemantickuAnalizu(Logger log, Reader br) throws Exception {
+
 	}
 	
 	public static void testiraj(Logger log, Reader br) throws Exception {
 
 		final int numOfFiles = 1;
+		
+		String path = "test/";
+		String fajlovi[] = new String[numOfFiles];
+		fajlovi[0] = "ziza_test";
+
 		File sourceCode[] = new File[numOfFiles];
-	//	sourceCode[0] = new File("test/program.mj");
-		sourceCode[0] = new File("test/ziza_test.mj");
 		int i = 0;
+		for(String fajl : fajlovi) {
+			sourceCode[i] = new File(path + fajlovi[i] + ".mj");
+			i++;
+		}
+
+		i = 0;
 		while(i < numOfFiles) {
 			log.info("Compiling source file: "+sourceCode[i].getAbsolutePath());
 			
@@ -114,36 +121,57 @@ public class Compiler {
 			
 			MJParser p = new MJParser(lexer);
 			Symbol s = p.parse();
+
+			log.info("\n ========== KRAJ TOKENIZACIJE ========== \n ");
 			
 			Program prog = (Program)(s.value);
-			Tab.init();
-			log.info(prog.toString(""));
-			log.info(" KRAJ TOKENIZACIJE \n ");
-			SemanticAnalyzer v = new SemanticAnalyzer();
-			prog.traverseBottomUp(v);
-			
-			log.info(" KRAJ PARSIRANJA \n");
-			
-			syntaxInfo(v);
-			
-			tsdump();
 
-			if(!p.errorDetected && v.passed()) {
-				File objFile = new File("test/program.obj");
-				if(objFile.exists()) objFile.delete();
-				
-				CodeGenerator codeGenerator = new CodeGenerator();
-				prog.traverseBottomUp(codeGenerator);
-				Code.dataSize = v.getNumOfConstants() + v.getNumOfGlobalArrays() + v.getNumOfGlobalVariables();
-				Code.mainPc = codeGenerator.getMainPc();
-				Code.write(new FileOutputStream(objFile));
-				log.info("Parsiranje USPESNO zavrseno!");
-			}else {
-				log.error("Parsiranje NEUSPESNO zavrseno!");
-			}
 			
+
+			if(!p.errorDetected) {
+
+				log.info("\n ========= SINTAKSNO STABLO ========= \n");
+
+				log.info(prog.toString(""));
+
+				log.info("\n ========== SEMANTICKA ANALIZA ========== \n");
+				Tab.init();
+				SemanticAnalyzer v = new SemanticAnalyzer();
+				prog.traverseBottomUp(v);
+				
+				log.info(" ========== KRAJ PARSIRANJA =========== \n");
+				
+				syntaxInfo(v);
+				
+				tsdump(); 
+				
+				if(!p.errorDetected && v.passed()) {
+					File objFile = new File("test/" + fajlovi[i] + ".obj");
+					if(objFile.exists()) objFile.delete();
+					
+					CodeGenerator codeGenerator = new CodeGenerator();
+					prog.traverseBottomUp(codeGenerator);
+					Code.dataSize = v.getNumOfConstants() + v.getNumOfGlobalArrays() + v.getNumOfGlobalVariables();
+					Code.mainPc = codeGenerator.getMainPc();
+					Code.write(new FileOutputStream(objFile));
+					log.info("Parsiranje USPESNO zavrseno!");
+					resetCodeClass();
+				}else {
+					log.error("Parsiranje NEUSPESNO zavrseno!");
+				}
+				
+
+			}
 			i++;
-		}
+		}		
+	}
+	
+	public static void resetCodeClass() {
+		Code.buf = new byte[8192];
+		Code.pc = 0;
+		Code.mainPc = -1;
+		Code.dataSize = 0;
+		Code.greska = false;
 	}
 	
 	public static void syntaxInfo(SemanticAnalyzer sa) {
@@ -165,8 +193,8 @@ public class Compiler {
 		
 		try {
 	
-			//testirajSintaksnuAnalizu(log, br);
-			//testirajSemantickuAnalizu(log, br);
+			testirajSintaksnuAnalizu(log, br);
+			testirajSemantickuAnalizu(log, br);
 			testiraj(log, br);
 
 		}finally {

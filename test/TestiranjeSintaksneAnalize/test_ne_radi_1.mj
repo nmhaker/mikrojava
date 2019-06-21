@@ -1,0 +1,15 @@
+// testiranje definicije globalne promenljive
+
+program testiranje
+	
+	int ? a;
+	int * b, c;
+	char niz[] -;
+	constanta int const_jedan = 1;
+	const int const_dva = 2, const_tri * 3;
+	
+{
+	void main() {
+		
+	}
+}

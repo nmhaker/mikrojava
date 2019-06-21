@@ -61,7 +61,7 @@
 	
 	<target name="disasm">
 		<java classname="rs.etf.pp1.mj.runtime.disasm">
-			<arg value="test/program.obj"/>
+			<arg value="test/ziza_test.obj"/>
 			<classpath>
 				<pathelement location="lib/mj-runtime.jar"/>
 			</classpath>
@@ -70,11 +70,50 @@
 	
 	<target name="runObj" depends="disasm">
 		<java classname="rs.etf.pp1.mj.runtime.Run">
+			<arg value="test/ziza_test.obj" />
+			<classpath>
+				<pathelement location="lib/mj-runtime.jar" />
+			</classpath>
+		</java>			
+	</target>
+
+	<target name="disasmSintaksna">
+		<java classname="rs.etf.pp1.mj.runtime.disasm">
+			<arg value="test/sintaksna_test_radi_1.obj"/>
+			<classpath>
+				<pathelement location="lib/mj-runtime.jar"/>
+			</classpath>
+		</java>
+		<java classname="rs.etf.pp1.mj.runtime.disasm">
+			<arg value="test/sintaksna_test_radi_2.obj"/>
+			<classpath>
+				<pathelement location="lib/mj-runtime.jar"/>
+			</classpath>
+		</java>
+	</target>
+	
+	<target name="runTestSintaksna" depends="disasmSintaksna">
+		<java classname="rs.etf.pp1.mj.runtime.Run">
+			<arg value="test/sintaksna_test_radi_1.obj" />
+			<classpath>
+				<pathelement location="lib/mj-runtime.jar" />
+			</classpath>
+		</java>		
+		<java classname="rs.etf.pp1.mj.runtime.Run">
+			<arg value="test/sintaksna_test_radi_2.obj" />
+			<classpath>
+				<pathelement location="lib/mj-runtime.jar" />
+			</classpath>
+		</java>			
+	</target>
+
+	<target name="runTestSemanticka" depends="disasm">
+		<java classname="rs.etf.pp1.mj.runtime.Run">
 			<arg value="test/program.obj" />
 			<classpath>
 				<pathelement location="lib/mj-runtime.jar" />
 			</classpath>
 		</java>			
 	</target>
-	
+
 </project>
