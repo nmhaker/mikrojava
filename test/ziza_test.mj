@@ -58,7 +58,7 @@ program test301
 		bodovi = bodovi + ((pet * jedan - 1) * inc(Broj.JEDAN) - (3 % 2 + 3*2 - 3) - inc(Broj.NULA) * 0);
 		print(bodovi);
 		
-		//read(bodovi);
+		read(bodovi);
 		bodovi = inc(bodovi);
 		print(bodovi);
 		

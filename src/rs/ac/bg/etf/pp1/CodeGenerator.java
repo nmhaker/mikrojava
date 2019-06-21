@@ -13,6 +13,7 @@ import rs.ac.bg.etf.pp1.ast.DivMulop;
 import rs.ac.bg.etf.pp1.ast.EnumUse;
 import rs.ac.bg.etf.pp1.ast.FuncCall;
 import rs.ac.bg.etf.pp1.ast.FuncCallName;
+import rs.ac.bg.etf.pp1.ast.GroupFactor;
 import rs.ac.bg.etf.pp1.ast.IdentDesignator;
 import rs.ac.bg.etf.pp1.ast.InstArrayProduction;
 import rs.ac.bg.etf.pp1.ast.MethBegin;
@@ -119,22 +120,23 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.loadConst(boolFactor.getB1() == true ? 1 : 0);
 	}
 	
+	private Stack<Byte> addOpStack = new Stack<>();
+	private Stack<Byte> mulOpStack = new Stack<>();
 
-	private byte operator = 0;
 	public void visit(PlusAddop plusAddop) {
-		operator = Code.add;
+		addOpStack.add((byte) Code.add);
 	}
 	public void visit(MinusAddop minusAddop) {
-		operator = Code.sub;
+		addOpStack.add((byte) Code.sub);
 	}
 	public void visit(MulMulop mulMulop) {
-		operator = Code.mul;
+		mulOpStack.add((byte)Code.mul);
 	}
 	public void visit(DivMulop divMulop) {
-		operator = Code.div;
+		mulOpStack.add((byte)Code.div);
 	}
 	public void visit(ModMulop modMulop) {
-		operator = Code.rem;
+		mulOpStack.add((byte)Code.rem);
 	}
 
 	public void visit(MethBegin methBegin) {
@@ -170,11 +172,11 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(MulopTerm mulopTerm) {
-		Code.put(operator);
+		Code.put(mulOpStack.pop());
 	}
 	
 	public void visit(AddopExpr addopExpr) {
-		Code.put(operator);
+		Code.put(addOpStack.pop());
 	}
 	
 	public void visit(DesStatAssignment designatorStatAssign) {
