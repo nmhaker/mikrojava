@@ -14,27 +14,13 @@ program prog
 
 	void main() {
 		
-		x = 2;
-		y = x * 2;
-		z = y + x*3 - 1;
-		
-		print(x);
-		print(y);
-		print(z);	
+		x = 'a';
+		y = 2;
+		z = 3;
 		
 		niz1 = new int [5];
 		
-		niz[1] = Broj.JEDAN;
-		
-		niz[Broj.DVA] = PET;
-		
-		niz[3]  = x * niz[2] + niz[Broj.JEDAN-1];
-		
-		print(niz[0]);
-		print(niz[1]);
-		print(niz[2]);
-		print(niz[3]);
-		
+		niz1[1] = 'b';	
 	}
 	
 }

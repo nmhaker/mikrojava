@@ -1,8 +1,56 @@
 program prog2
-{
-	void main()
-	{
 	
+	int x;
+	int y;
+	int z;
+	
+	int niz1[];
+	
+	const int PET = 5;
+	
+	enum Broj { JEDAN = 1, DVA = 2, TRI = 3, CETRI = 4 }
+	
+{
+
+	int sqr(int x){
+		return x * x;
+	}
+	
+	int inc(int x) int pom; {
+		pom = 1;
+		return  x + pom;
+	}
+
+	void main() {
+		
+		x = 2;
+		y = x * 2;
+		z = y + x*3 - 1;
+		
+		print(x);
+		print(y);
+		print(z);	
+		
+		niz1 = new int [5];
+		x = niz1[1];
+		niz1[1] = 2;
+		niz1[1] = Broj.JEDAN;
+		
+		niz1[Broj.DVA] = PET;
+		
+		niz1[3]  = x * niz1[2] + niz1[Broj.JEDAN-1];
+		
+		print(niz1[0]);
+		print(niz1[1]);
+		print(niz1[2]);
+		print(niz1[3]);
+		
+
+		niz1[Broj.JEDAN] = inc(niz1[Broj.DVA]);
+		print(niz1[1]);
+		
+		print(sqr(z));
+		
 	}
 	
 }

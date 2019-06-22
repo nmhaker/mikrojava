@@ -105,18 +105,15 @@ public class Compiler {
 
 		BufferedReader br = null;
 		try {
-			final int numOfFiles = 8;
+			final int numOfFiles = 5;
 			
 			String path = "test/TestiranjeSemantickeAnalize/";
 			String fajlovi[] = new String[numOfFiles];
 			fajlovi[0] = "test_radi_1";
 			fajlovi[1] = "test_radi_2";
-			fajlovi[2] = "test_radi_3";
-			fajlovi[3] = "test_radi_4";
-			fajlovi[4] = "test_ne_radi_1";
-			fajlovi[5] = "test_ne_radi_2";
-			fajlovi[6] = "test_ne_radi_3";
-			fajlovi[7] = "test_ne_radi_4";
+			fajlovi[2] = "test_ne_radi_1";
+			fajlovi[3] = "test_ne_radi_2";
+			fajlovi[4] = "test_ne_radi_3";
 
 			File sourceCode[] = new File[numOfFiles];
 			int i = 0;
@@ -284,9 +281,9 @@ public class Compiler {
 
 		Logger log = Logger.getLogger(Compiler.class);
 		
-		testirajSintaksnuAnalizu(log);
+		//testirajSintaksnuAnalizu(log);
 		testirajSemantickuAnalizu(log);
-		testiraj(log);
+		//testiraj(log);
 
 	}
 	

@@ -386,7 +386,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		public void visit(MyArray myArray) {
 			MySTDump mystdump = new MySTDump();
 			usingArrName = myArray.getMyArrayName().getArrName();
-			usingArrType = Tab.find(usingArrName).getType();
+			Obj o = Tab.find(usingArrName);
+			if(o == Tab.noObj) {
+				report_error("Ne postoji definisan simbol: " , myArray);
+				errorDetected = true;
+			}
+			usingArrType = o.getType();
 			if(usingArrType.getKind() != Struct.Array) {
 				report_error("Pokusavate da koristite promenljivu kao niz !", myArray);
 				errorDetected = true;

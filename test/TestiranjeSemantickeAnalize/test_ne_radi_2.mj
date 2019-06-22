@@ -1,8 +1,48 @@
-program prog2
-{
-	void main()
-	{
+program prog
 	
+	int x;
+	char y;
+	bool z;
+	
+	int niz1[];
+	
+	const int PET = 5;
+	
+	enum Broj { JEDAN = 1, DVA = 2, TRI = 3, CETRI = 4 }
+	
+{
+	
+	void meth(int x) {
+	
+		return 5;
+	}
+	
+	int a(int x) {
+		print(x);
+	}
+	
+	void regular(int x, char y) {
+		print(x);
+		print(y);	
+	}
+
+	void main() {
+		
+		x = 'a';
+		y = 2;
+		z = 3;
+		
+		niz1 = new int [5];
+		
+		meth(5);
+		
+		x = a(3);
+		
+		regular(3);
+		
+		regular('a', 3);
+		
+		niz1[1] = 'b';	
 	}
 	
 }

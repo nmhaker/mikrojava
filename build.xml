@@ -120,18 +120,7 @@
 				<pathelement location="lib/mj-runtime.jar" />
 			</classpath>
 		</java>			
-		<java classname="rs.etf.pp1.mj.runtime.disasm">
-			<arg value="test/semanticka_test_radi_3.obj" />
-			<classpath>
-				<pathelement location="lib/mj-runtime.jar" />
-			</classpath>
-		</java>		
-		<java classname="rs.etf.pp1.mj.runtime.disasm">
-			<arg value="test/semanticka_test_radi_4.obj" />
-			<classpath>
-				<pathelement location="lib/mj-runtime.jar" />
-			</classpath>
-		</java>					
+		
 	</target>	
 
 	<target name="runTestSemanticka" depends="disasmSemanticka">
@@ -147,18 +136,7 @@
 				<pathelement location="lib/mj-runtime.jar" />
 			</classpath>
 		</java>			
-		<java classname="rs.etf.pp1.mj.runtime.Run">
-			<arg value="test/semanticka_test_radi_3.obj" />
-			<classpath>
-				<pathelement location="lib/mj-runtime.jar" />
-			</classpath>
-		</java>		
-		<java classname="rs.etf.pp1.mj.runtime.Run">
-			<arg value="test/semanticka_test_radi_4.obj" />
-			<classpath>
-				<pathelement location="lib/mj-runtime.jar" />
-			</classpath>
-		</java>			
+		
 	</target>
 
 </project>
