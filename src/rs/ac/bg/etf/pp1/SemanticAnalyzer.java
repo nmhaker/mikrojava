@@ -304,7 +304,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			
 			// Ulancavanje konstanti
 			String constIdent = null;
-			Struct constExprType = null;
 
 			public void visit(ConstExprNumber constExpr) {
 				// Proveri postojece ime u tabeli simbola
@@ -314,8 +313,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					return;
 				}
 				constIdent = constExpr.getConstIdent();
+				if(!currentType.assignableTo(Tab.intType)) {
+					report_error("ERROR : greska prilikom definisanja konstanti, TYPE MISMATCH", constExpr);
+				}else {
+					numOfConstantsDefined++;
+					report_info("Definisana konstanta: " + constIdent, constExpr);
+				}
 				Obj obj = new Obj(Obj.Con, constIdent, Tab.intType, constExpr.getConstValue(), 0);
-				constExprType = Tab.intType;
 				Tab.currentScope().addToLocals(obj);
 			}
 			public void visit(ConstExprBool constExpr) {
@@ -326,8 +330,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					return;
 				}
 				constIdent = constExpr.getConstIdent();
+				if(!currentType.assignableTo(Tab.find("bool").getType())) {
+					report_error("ERROR : greska prilikom definisanja konstanti, TYPE MISMATCH", constExpr);
+				}else {
+					numOfConstantsDefined++;
+					report_info("Definisana konstanta: " + constIdent, constExpr);
+				}
 				Obj obj = new Obj(Obj.Con, constIdent, Tab.find("bool").getType(), constExpr.getConstValue() == true ? 1 : 0, 0);
-				constExprType = Tab.find("bool").getType();
 				Tab.currentScope().addToLocals(obj);
 			}
 			public void visit(ConstExprChar constExpr) {
@@ -338,20 +347,16 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 					return;
 				}
 				constIdent = constExpr.getConstIdent();
-				Obj obj = new Obj(Obj.Con, constIdent, Tab.charType, constExpr.getConstValue().charAt(1), 0);
-				constExprType = Tab.charType;
-				Tab.currentScope().addToLocals(obj);
-			}
-
-			// Detektovanje definisane konstante
-			public void visit(ConstDecl constDecl) {
-				if(!constExprType.assignableTo(currentType)) {
-					report_error("ERROR : greska prilikom definisanja konstanti, TYPE MISMATCH", constDecl);
+				if(!currentType.assignableTo(Tab.charType)) {
+					report_error("ERROR : greska prilikom definisanja konstanti, TYPE MISMATCH", constExpr);
 				}else {
 					numOfConstantsDefined++;
-					report_info("Definisana konstanta: " + constIdent, constDecl);
+					report_info("Definisana konstanta: " + constIdent, constExpr);
 				}
+				Obj obj = new Obj(Obj.Con, constIdent, Tab.charType, constExpr.getConstValue().charAt(1), 0);
+				Tab.currentScope().addToLocals(obj);
 			}
+			
 
 	// DETEKCIJA UPOTREBE SIMBOLA
 			
