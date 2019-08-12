@@ -23,6 +23,10 @@ public class Compiler {
 		Log4JUtils.instance().prepareLogFile(Logger.getRootLogger());
 	}
 	
+	private static boolean testPassed = false;
+	
+	private static final boolean debugAST = false;
+	
 	public static void testirajSintaksnuAnalizu(Logger log) {
 		BufferedReader br = null;
 		try {
@@ -63,7 +67,8 @@ public class Compiler {
 
 					log.info("\n ========= SINTAKSNO STABLO ========= \n");
 
-					log.info(prog.toString(""));
+					if(debugAST)
+						log.info(prog.toString(""));
 
 					log.info("\n ========== SEMANTICKA ANALIZA ========== \n");
 					Tab.init();
@@ -84,12 +89,14 @@ public class Compiler {
 						Code.mainPc = codeGenerator.getMainPc();
 						Code.write(new FileOutputStream(objFile));
 						log.info("Parsiranje USPESNO zavrseno!");
+						if(i <= 1)
+							testPassed = true;
 						resetCodeClass();
 					}else {
+						if(i >= 2)
+							testPassed = true;
 						log.error("Parsiranje NEUSPESNO zavrseno!");
 					}
-					
-
 				}
 				i++;
 			}	
@@ -105,7 +112,7 @@ public class Compiler {
 
 		BufferedReader br = null;
 		try {
-			final int numOfFiles = 6;
+			final int numOfFiles = 5;
 			
 			String path = "test/TestiranjeSemantickeAnalize/";
 			String fajlovi[] = new String[numOfFiles];
@@ -114,7 +121,6 @@ public class Compiler {
 			fajlovi[2] = "test_ne_radi_1";
 			fajlovi[3] = "test_ne_radi_2";
 			fajlovi[4] = "test_ne_radi_3";
-			fajlovi[5] = "test_ne_radi_sa_odbrane";
 
 			File sourceCode[] = new File[numOfFiles];
 			int i = 0;
@@ -143,7 +149,8 @@ public class Compiler {
 
 					log.info("\n ========= SINTAKSNO STABLO ========= \n");
 
-					log.info(prog.toString(""));
+					if(debugAST)
+						log.info(prog.toString(""));
 
 					log.info("\n ========== SEMANTICKA ANALIZA ========== \n");
 					Tab.init();
@@ -164,8 +171,12 @@ public class Compiler {
 						Code.mainPc = codeGenerator.getMainPc();
 						Code.write(new FileOutputStream(objFile));
 						log.info("Parsiranje USPESNO zavrseno!");
+						if( i <= 1)
+							testPassed = true;
 						resetCodeClass();
 					}else {
+						if( i >= 2)
+							testPassed = true;
 						log.error("Parsiranje NEUSPESNO zavrseno!");
 					}
 					
@@ -220,7 +231,8 @@ public class Compiler {
 
 					log.info("\n ========= SINTAKSNO STABLO ========= \n");
 
-					log.info(prog.toString(""));
+					if(debugAST)
+						log.info(prog.toString(""));
 
 					log.info("\n ========== SEMANTICKA ANALIZA ========== \n");
 					Tab.init();
@@ -243,6 +255,7 @@ public class Compiler {
 						Code.mainPc = codeGenerator.getMainPc();
 						Code.write(new FileOutputStream(objFile));
 						log.info("Parsiranje USPESNO zavrseno!");
+						testPassed = true;
 						resetCodeClass();
 					}else {
 						log.error("Parsiranje NEUSPESNO zavrseno!");
@@ -297,7 +310,8 @@ public class Compiler {
 
 					log.info("\n ========= SINTAKSNO STABLO ========= \n");
 
-					log.info(prog.toString(""));
+					if(debugAST)
+						log.info(prog.toString(""));
 
 					log.info("\n ========== SEMANTICKA ANALIZA ========== \n");
 					Tab.init();
@@ -361,10 +375,22 @@ public class Compiler {
 
 		Logger log = Logger.getLogger(Compiler.class);
 		
-		//testirajSintaksnuAnalizu(log);
-		//testirajSemantickuAnalizu(log);
-		//testirajJavniTest(log);
-		testirajMoje(log);
+		testirajSintaksnuAnalizu(log);
+
+		if(testPassed) {
+			testPassed = false;
+			testirajSemantickuAnalizu(log);
+		}
+
+		if(testPassed) {
+			testPassed = false;
+			testirajJavniTest(log);
+		}
+
+		if(testPassed) {
+			testPassed = false;
+			testirajMoje(log);
+		}
 
 	}
 	

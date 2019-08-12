@@ -63,12 +63,16 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(ReadCall readCall) {
-		if(readCall.getDesignator().obj.getType() == Tab.intType) {
+		if(readCall.getDesignator().obj.getType() == Tab.intType || (readCall.getDesignator().obj.getType().getKind() == Struct.Array && readCall.getDesignator().obj.getType().getElemType() == Tab.intType)) {
 			Code.put(Code.read);
 		}else {
 			Code.put(Code.bread);
 		}
-		Code.store(readCall.getDesignator().obj);
+		Obj desigObj = readCall.getDesignator().obj;
+		if(VAR_array)
+			Code.store(desigObj);
+		else
+			Code.store(new Obj(Obj.Elem, desigObj.getName(), desigObj.getType(), desigObj.getAdr(), desigObj.getLevel()));
 	}
 
 	/*
@@ -87,11 +91,11 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	private int varBytes = 0;
 	public void visit(VarUse varUse) {
-		if(varUse.obj.getKind() == Obj.Var) {
+		if(varUse.obj.getKind() == Obj.Var && varUse.obj.getType().getKind() != Struct.Array) {
 			int oldPc = Code.pc;
 			Code.load(varUse.obj);
 			varBytes = Code.pc - oldPc;
-		}else if(varUse.obj.getKind() == Obj.Elem) {
+		}else if(varUse.obj.getKind() == Obj.Var && varUse.obj.getType().getKind() == Struct.Array) {
 			varBytes = 0;
 			Code.load(new Obj(Obj.Var, varUse.obj.getName(), varUse.obj.getType(), varUse.obj.getAdr(), varUse.obj.getLevel()));
 		}else 
@@ -107,7 +111,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	private Struct myArrayType = null;
 	public void visit(MyArray myArray) {
 		int oldPc = Code.pc;
-		Code.load(myArray.obj);
+		Code.load(new Obj(Obj.Elem, myArray.obj.getName(), myArray.obj.getType(), myArray.obj.getAdr(), myArray.obj.getLevel()));
 		varBytes = Code.pc - oldPc;
 		myArrayType = myArray.obj.getType();
 	}
@@ -179,11 +183,15 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(addOpStack.pop());
 	}
 	
+	private boolean VAR_array = true;
 	public void visit(DesStatAssignment designatorStatAssign) {
 		Obj designatorObj = designatorStatAssign.getDesignator().obj;
-		if(!instantiationHappened)
-			Code.store(designatorObj);
-		else {
+		if(!instantiationHappened) {
+			if(!VAR_array) 
+				Code.store(new Obj(Obj.Elem, designatorObj.getName(), designatorObj.getType(), designatorObj.getAdr(), designatorObj.getLevel()));
+			else
+				Code.store(designatorObj);
+		} else {
 			Code.store(new Obj(Obj.Var, designatorObj.getName(), designatorObj.getType(), designatorObj.getAdr(), designatorObj.getLevel()));
 			instantiationHappened = false;
 		}
@@ -209,10 +217,12 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	public void visit(IdentDesignator identDesignator) {
 		Code.pc-=varBytes;
+		VAR_array = true;
 	}
 	
 	
 	public void visit(MyArrayDesignator myArrDesignator) {
+		VAR_array = false;
 		Code.pc-=varBytes;
 	}
 

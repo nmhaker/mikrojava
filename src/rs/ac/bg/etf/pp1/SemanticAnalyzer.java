@@ -40,7 +40,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	public boolean passed() {
 		return !errorDetected;
 	}
-	
+		
 	// KONSTRUKTOR ZA UBACIVANJE BOOL TIPA U UNIVERSE OPSEG
 	public SemanticAnalyzer() {
 		super();
@@ -122,7 +122,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				}else {
 					if(Tab.find(varName) == Tab.noObj) {
 						Tab.insert(Obj.Var, varName, currentType);
-						Tab.find(varName).setAdr(numOfGlobalVarsDefined+numOfGlobalArraysDefined);
+						//Tab.find(varName).setAdr(numOfGlobalVarsDefined+numOfGlobalArraysDefined);
 						numOfGlobalVarsDefined++;
 						report_info("Definisana globalna promenljiva: " + currentTypeName + " " + varName, simpleVarDecl);
 					}else {
@@ -240,8 +240,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 						errorDetected = true;
 						return;
 					}
-					//Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, currentType));
-					Tab.insert(Obj.Elem, arrName, new Struct(Struct.Array, currentType));
+					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, currentType));
+					//Tab.insert(Obj.Elem, arrName, new Struct(Struct.Array, currentType));
 					if(methName != null && methName.equals("main")) numOfLocalArraysDefined++;
 					report_info("Definisan lokalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
 				}else {
@@ -250,9 +250,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 						errorDetected = true;
 						return;
 					}
-					//Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, currentType));
-					Tab.insert(Obj.Elem, arrName, new Struct(Struct.Array, currentType));
-					Tab.find(arrName).setAdr(numOfGlobalArraysDefined+numOfGlobalVarsDefined);
+					Tab.insert(Obj.Var, arrName, new Struct(Struct.Array, currentType));
+					//Tab.insert(Obj.Elem, arrName, new Struct(Struct.Array, currentType));
+					//Tab.find(arrName).setAdr(numOfGlobalArraysDefined+numOfGlobalVarsDefined);
 					numOfGlobalArraysDefined++;
 					report_info("Definisan globalni niz: " + currentTypeName + " " + arrayDecl.getArrayName(), arrayDecl);
 				}
@@ -304,6 +304,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			
 			// Ulancavanje konstanti
 			String constIdent = null;
+			Struct constExprType = null;
 
 			public void visit(ConstExprNumber constExpr) {
 				// Proveri postojece ime u tabeli simbola
@@ -314,6 +315,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				}
 				constIdent = constExpr.getConstIdent();
 				Obj obj = new Obj(Obj.Con, constIdent, Tab.intType, constExpr.getConstValue(), 0);
+				constExprType = Tab.intType;
 				Tab.currentScope().addToLocals(obj);
 			}
 			public void visit(ConstExprBool constExpr) {
@@ -325,6 +327,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				}
 				constIdent = constExpr.getConstIdent();
 				Obj obj = new Obj(Obj.Con, constIdent, Tab.find("bool").getType(), constExpr.getConstValue() == true ? 1 : 0, 0);
+				constExprType = Tab.find("bool").getType();
 				Tab.currentScope().addToLocals(obj);
 			}
 			public void visit(ConstExprChar constExpr) {
@@ -336,13 +339,18 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				}
 				constIdent = constExpr.getConstIdent();
 				Obj obj = new Obj(Obj.Con, constIdent, Tab.charType, constExpr.getConstValue().charAt(1), 0);
+				constExprType = Tab.charType;
 				Tab.currentScope().addToLocals(obj);
 			}
 
 			// Detektovanje definisane konstante
 			public void visit(ConstDecl constDecl) {
-				numOfConstantsDefined++;
-				report_info("Definisana konstanta: " + constIdent, constDecl);
+				if(!constExprType.assignableTo(currentType)) {
+					report_error("ERROR : greska prilikom definisanja konstanti, TYPE MISMATCH", constDecl);
+				}else {
+					numOfConstantsDefined++;
+					report_info("Definisana konstanta: " + constIdent, constDecl);
+				}
 			}
 
 	// DETEKCIJA UPOTREBE SIMBOLA
@@ -741,7 +749,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		return numOfGlobalVarsDefined;
 	}
 	public int getNumOfLocalVariables() {
-		return numOfGlobalVarsDefined;
+		return numOfLocalVarsDefined;
 	}
 	public int getNumOfGlobalArrays() {
 		return numOfGlobalArraysDefined;

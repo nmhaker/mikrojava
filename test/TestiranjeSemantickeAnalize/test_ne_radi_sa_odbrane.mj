@@ -1,44 +1,20 @@
 program prog
 
-	int x;
-	int y;
-	int z;
-	
 	int niz1[];
-	char cniz[];
-	
-	const int PET = 5;
-	
-	enum Broj { JEDAN = 1, DVA = 2, TRI = 3, CETRI = 4 }
 	
 {
 
 	void main() {
 		
-		x = 2;
-		y = x * 2;
-		z = y + x*3 - 1;
-		
-		print(x);
-		print(y);
-		print(z);	
-		
-		niz1 = new int [5];
-		read(x);
-		read(niz1[x]);
-		read(cniz[2]);
-		x = niz1[1];
-		niz1[1] = 2;
-		niz1[1] = Broj.JEDAN;
-		
-		niz1[Broj.DVA] = PET;
-		
-		niz1[3]  = x * niz1[2] + niz1[Broj.JEDAN-1];
-		
-		print(niz1[0]);
-		print(niz1[1]);
+		niz1 = new int[15];
+		niz1[2] = 3;
+		niz1[10] = 4;
 		print(niz1[2]);
+		print(niz1[10]);
+		
+		read(niz1[3]);
 		print(niz1[3]);
+		print(niz1[2]);
 		
 	}
 	
