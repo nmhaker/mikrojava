@@ -6,6 +6,10 @@ program prog
 	char y;	
 	const int a1 = 2 , a3 = 6;
 	
+	enum Boja { CRNO, BELO, CRVENO }
+	
+	Boja niz3[];
+	
 {
 
 	int inc(int x) {
@@ -19,13 +23,21 @@ program prog
 
 		niz2 = new int[1]{ 99 };
 		
-		print(niz1[0]);
-		print(',');
-		print(niz1[1]);
-		print(',');
-		print(niz1[2]);
-		print('-');
+		niz3 = new Boja[5];	
+		
+		niz3[0] = Boja.CRNO;
+		niz3[1] = Boja.BELO;
+		
+		niz1[0] = Boja.CRNO;
+		
+		print(niz3[0]);
+		print(niz3[1]);
+		
 		print(niz2[0]);
+		
+		print(niz1[0]);
+		print(niz1[1]);
+		print(niz1[2]);
 	}
 	
 }

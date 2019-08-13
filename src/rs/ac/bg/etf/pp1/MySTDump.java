@@ -115,6 +115,9 @@ public class MySTDump extends SymbolTableVisitor {
 			case Struct.Class:
 				output.append("Class");
 				break;
+			case Struct.Enum:
+				output.append("Enum");
+				break;
 			}
 			break;
 		case Struct.Class:

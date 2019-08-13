@@ -377,11 +377,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				errorDetected = true;
 			}
 			usingVarType = varObj.getType();
+			//Za slucaj kad imamo niz koji je tipa Enum, potrebno je jedan nivo apstrakcije izvuci iz tipa
+			if(usingVarType.getKind() == Struct.Array && usingVarType.getElemType().getKind()==Struct.Enum)
+				usingVarType = usingVarType.getElemType();
 			if(!isRightSideOfAssignment && (usingVarType.getKind() == Struct.Enum) ) {
-				//if(!leftSideIsEnum) {
-					leftSideIsEnum = true;
-					leftEnumType = usingVarType;
-				//}
+				leftSideIsEnum = true;
+				leftEnumType = usingVarType;
 			}else if(isRightSideOfAssignment && (usingVarType.getKind() == Struct.Enum)) {
 				rightEnumType = usingVarType;
 			}
@@ -477,16 +478,20 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		}
 		public void visit(DesStatAssignment desStatAssignment) {
 			if(instantiationHappened) {
-				if(!designatorType.getElemType().compatibleWith(instPrimExprType)) {
+				if(leftSideIsEnum) {
+					if(!leftEnumType.compatibleWith(instPrimExprType)) {
+						report_error("Tip kojim se instancira niz nije isti kao tip niza", desStatAssignment);
+						errorDetected = true;
+					}
+				}else if(!designatorType.getElemType().compatibleWith(instPrimExprType)) {
 					report_error("Tip kojim se instancira niz nije isti kao tip niza", desStatAssignment);
 					errorDetected = true;
 				}
-				instantiationHappened = false;
 			}else if(!designatorType.compatibleWith(exprType)) {
 				report_error("Designator nije kompatibilan sa Expr-om !", desStatAssignment);
 				errorDetected = true;
 			}
-			if(leftSideIsEnum) {
+			if(leftSideIsEnum && !instantiationHappened) {
 				if(!leftEnumType.equals(rightEnumType)) {
 					report_error("Designator enum-a nije kompatibilan sa Expr-om", desStatAssignment);
 					errorDetected = true;
@@ -496,6 +501,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			leftEnumType = null;
 			rightEnumType = null;
 			isRightSideOfAssignment = false;
+			instantiationHappened = false;
 		}
 		
 		private boolean instantiationHappened = false;
@@ -724,21 +730,27 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			initializatorListExist = true;
 		}
 
+		private boolean instantiatedWithEnum = false;
+		private Struct instPrimExprType = null;
 		public void visit(InstPrimitiveProduction instPrim) {
-			factorType = currentType;
+			instPrimExprType = factorType = currentType;
+			if(currentType.getKind() == Struct.Enum) {
+				instantiatedWithEnum = true;
+				enumFactorUsed = true;
+			}
 		}
 		
-		private Struct instPrimExprType = null;
 		private Integer sizeOfArray = null;
+		private Struct instPrimExprConstType = null;
 		public void visit(InstPrimitiveTypeProduction instPrimitiveType) {
-			instPrimExprType = currentType;
+			instPrimExprConstType = factorType;
 			sizeOfArray = valOfNumberFactor;
 			factorType = new Struct(Struct.Array, currentType);
 			instPrimitiveType.struct = factorType;
 		}
 		
 		public void visit(InstArrayProduction instArrayProduction) {
-			if(instPrimExprType.getKind() != Struct.Int) {
+			if(instPrimExprConstType.getKind() != Struct.Int) {
 				report_error("Greska u instanciranju niza, konstanta za velicinu niza nije Integer! ", instArrayProduction);
 				errorDetected = true;
 			}
