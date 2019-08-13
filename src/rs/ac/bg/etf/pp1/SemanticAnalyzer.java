@@ -476,7 +476,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			}
 		}
 		public void visit(DesStatAssignment desStatAssignment) {
-			if(!designatorType.compatibleWith(exprType)) {
+			if(instantiationHappened) {
+				if(!designatorType.getElemType().compatibleWith(instPrimExprType)) {
+					report_error("Tip kojim se instancira niz nije isti kao tip niza", desStatAssignment);
+					errorDetected = true;
+				}
+				instantiationHappened = false;
+			}else if(!designatorType.compatibleWith(exprType)) {
 				report_error("Designator nije kompatibilan sa Expr-om !", desStatAssignment);
 				errorDetected = true;
 			}
@@ -490,6 +496,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			leftEnumType = null;
 			rightEnumType = null;
 			isRightSideOfAssignment = false;
+		}
+		
+		private boolean instantiationHappened = false;
+		public void visit(InstFactor instFactor) {
+			instantiationHappened = true;
 		}
 		
 		// readCall metoda ocekuje int/char/bool tip argumenta
@@ -675,18 +686,14 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	// POSTAVLJANJE TIPA FAKTORA
 
 		private Struct factorType = null;
-		private boolean identFactorPassed = false;
 		@Override
 		public void visit(IdentFactor identFactor) {
 			factorType = usingVarType;
-			identFactorPassed = true;
 		}
 		
-		private boolean funcCallFactorPassed = false;
 		@Override
 		public void visit(FuncCallFactor FuncCallFactor) {
 			factorType = funcType;
-			funcCallFactorPassed = true;
 		}
 
 		private Struct rightEnumType = null;
@@ -698,55 +705,73 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			enumFactorUsed = true;
 		}
 
-		private boolean arrayFactorPassed = false;
 		@Override
 		public void visit(ArrayFactor ArrayFactor) {
 			factorType = usingArrType;
-			arrayFactorPassed  = true;
-		}
-
-		private boolean instPrimitiveFactorPassed = false;
-		public void visit(InstPrimitive instPrim) {
-			factorType = currentType;
-			instPrimitiveFactorPassed = true;
 		}
 		
-		private boolean instArrayProdFactorPassed = false;
+		private Integer numOfInitializators = 0;
+		public void visit(InstArrayInitNodeProduction instArrInitNodeProd) {
+			if(!exprType.assignableTo(instPrimExprType)) {
+				report_error("Greska tip inicijalizatora se ne slaze sa tipom niza!", instArrInitNodeProd);
+				errorDetected = true;
+			}
+			numOfInitializators++;
+		}
+		
+		private boolean initializatorListExist = false;
+		public void visit(InstArrayInitProduction instArrInitProd) {
+			initializatorListExist = true;
+		}
+
+		public void visit(InstPrimitiveProduction instPrim) {
+			factorType = currentType;
+		}
+		
+		private Struct instPrimExprType = null;
+		private Integer sizeOfArray = null;
+		public void visit(InstPrimitiveTypeProduction instPrimitiveType) {
+			instPrimExprType = currentType;
+			sizeOfArray = valOfNumberFactor;
+			factorType = new Struct(Struct.Array, currentType);
+			instPrimitiveType.struct = factorType;
+		}
+		
 		public void visit(InstArrayProduction instArrayProduction) {
-			if(exprType.getKind() != Struct.Int) {
+			if(instPrimExprType.getKind() != Struct.Int) {
 				report_error("Greska u instanciranju niza, konstanta za velicinu niza nije Integer! ", instArrayProduction);
 				errorDetected = true;
 			}
-			factorType = new Struct(Struct.Array, currentType);
-			instArrayProduction.struct = factorType;
-			instArrayProdFactorPassed = true;
+			if(initializatorListExist && (numOfInitializators != sizeOfArray)) {
+				report_error("Greska broj inicijalizatora se ne slaze sa velicinom niza", instArrayProduction);
+				errorDetected = true;
+			}
+			// Da bih mogao u CodeGenerator-u da znam koliko je veliki niz za inicijalizatorsku listu
+			instArrayProduction.obj = new Obj(Obj.NO_VALUE, "value_holder", Tab.noType);
+			instArrayProduction.obj.setFpPos(sizeOfArray);
+			numOfInitializators = 0;
+			initializatorListExist = false;
 		}
 
-		private boolean boolFactorPassed = false;
 		@Override
 		public void visit(BoolFactor BoolFactor) {
 			factorType = Tab.find("bool").getType();
-			boolFactorPassed = true;
 		}
 
-		private boolean charFactorPassed = false;
 		@Override
 		public void visit(CharFactor CharFactor) {
 			factorType = Tab.charType;
-			charFactorPassed = true;
 		}
 
-		private boolean numberFactorPassed = false;
+		private Integer valOfNumberFactor = null;
 		@Override
-		public void visit(NumberFactor NumberFactor) {
+		public void visit(NumberFactor numberFactor) {
 			factorType = Tab.intType;
-			numberFactorPassed = true;
+			valOfNumberFactor = numberFactor.getN1();
 		}
 		
-		private boolean groupFactorPassed = false;
 		public void visit(GroupFactor groupFactor) {
 			factorType = exprType;
-			groupFactorPassed = true;
 		}
 
 	// Syntax info getters

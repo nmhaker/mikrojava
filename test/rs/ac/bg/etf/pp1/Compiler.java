@@ -375,22 +375,22 @@ public class Compiler {
 
 		Logger log = Logger.getLogger(Compiler.class);
 		
-		testirajSintaksnuAnalizu(log);
+		//testirajSintaksnuAnalizu(log);
 
-		if(testPassed) {
-			testPassed = false;
-			testirajSemantickuAnalizu(log);
-		}
+	//	if(testPassed) {
+	//		testPassed = false;
+		//	testirajSemantickuAnalizu(log);
+	//	}
 
-		if(testPassed) {
-			testPassed = false;
-			testirajJavniTest(log);
-		}
+	//	if(testPassed) {
+	//		testPassed = false;
+		//	testirajJavniTest(log);
+	//	}
 
-		if(testPassed) {
-			testPassed = false;
+		//if(testPassed) {
+		//	testPassed = false;
 			testirajMoje(log);
-		}
+	//	}
 
 	}
 	

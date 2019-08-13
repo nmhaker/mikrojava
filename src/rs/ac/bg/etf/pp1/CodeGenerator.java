@@ -14,8 +14,11 @@ import rs.ac.bg.etf.pp1.ast.EnumUse;
 import rs.ac.bg.etf.pp1.ast.FuncCall;
 import rs.ac.bg.etf.pp1.ast.FuncCallName;
 import rs.ac.bg.etf.pp1.ast.GroupFactor;
+import rs.ac.bg.etf.pp1.ast.PreHookUpCallProduction;
 import rs.ac.bg.etf.pp1.ast.IdentDesignator;
+import rs.ac.bg.etf.pp1.ast.InstArrayInitNodeProduction;
 import rs.ac.bg.etf.pp1.ast.InstArrayProduction;
+import rs.ac.bg.etf.pp1.ast.InstPrimitiveTypeProduction;
 import rs.ac.bg.etf.pp1.ast.MethBegin;
 import rs.ac.bg.etf.pp1.ast.MethCall;
 import rs.ac.bg.etf.pp1.ast.MethDecl;
@@ -74,16 +77,6 @@ public class CodeGenerator extends VisitorAdaptor {
 		else
 			Code.store(new Obj(Obj.Elem, desigObj.getName(), desigObj.getType(), desigObj.getAdr(), desigObj.getLevel()));
 	}
-
-	/*
-	public void visit(IdentDesignator identDesignator) {
-		Code.load(identDesignator.obj);
-	}
-	
-	public void visit(MyArrayDesignator myArrayDesignator) {
-		Code.load(myArrayDesignator.obj);
-	}
-	*/	
 	
 	public void visit(NumberFactor numberFactor) {
 		Code.loadConst(numberFactor.getN1());
@@ -192,7 +185,6 @@ public class CodeGenerator extends VisitorAdaptor {
 			else
 				Code.store(designatorObj);
 		} else {
-			Code.store(new Obj(Obj.Var, designatorObj.getName(), designatorObj.getType(), designatorObj.getAdr(), designatorObj.getLevel()));
 			instantiationHappened = false;
 		}
 	}
@@ -215,26 +207,47 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.load(enumUse.obj);
 	}
 	
+	Obj designatorObj = null;
 	public void visit(IdentDesignator identDesignator) {
 		Code.pc-=varBytes;
 		VAR_array = true;
+		designatorObj = identDesignator.obj;
 	}
 	
 	
 	public void visit(MyArrayDesignator myArrDesignator) {
 		VAR_array = false;
 		Code.pc-=varBytes;
+		designatorObj = myArrDesignator.obj;
 	}
 
-	private boolean instantiationHappened = false;
+	private int initializer_counter = 0;
+	public void visit(PreHookUpCallProduction hookUpCallProduction) {
+		Code.put(Code.getstatic);
+		Code.put2(designatorObj.getAdr());
+		Code.put(Code.const_);
+		Code.put4(initializer_counter++);
+	}
+	
+	public void visit(InstArrayInitNodeProduction instArrayInitNodeProduction) {
+		if (designatorObj.getType().getElemType().getKind() == Struct.Char) Code.put(Code.bastore);
+        else Code.put(Code.astore); 
+	}
+	
 	public void visit(InstArrayProduction instArrayProduction) {
+		initializer_counter = 0;
+	}
+	
+	private boolean instantiationHappened = false;
+	public void visit(InstPrimitiveTypeProduction instPrimTypeProd) {
 		Code.put(Code.newarray);
-		if(instArrayProduction.struct.getElemType().getKind() == Struct.Int)
+		if(instPrimTypeProd.struct.getElemType().getKind() == Struct.Int)
 			Code.put(1);
-		else if(instArrayProduction.struct.getElemType().getKind() == Struct.Char)
+		else if(instPrimTypeProd.struct.getElemType().getKind() == Struct.Char)
 			Code.put(0);
 		else
 			Code.put(1);
+		Code.store(new Obj(Obj.Var, designatorObj.getName(), designatorObj.getType(), designatorObj.getAdr(), designatorObj.getLevel()));
 		instantiationHappened = true;
 	}
 	

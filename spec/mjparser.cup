@@ -67,13 +67,16 @@ nonterminal ConstExpr, ConstInitializationList, ConstDecl;
 nonterminal GlobalDeclList, GlobalDecl,  GlobalVarDecl;
 nonterminal ParameterList, Parameter, ArgList, OptionalArgs;
 nonterminal MethType, EnumDecl, FuncCallName;
+nonterminal InstArrayInitList, InstArrayInitNode, InstArrayInit;
+nonterminal PreHookUpCall;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, EnumUse, MethBegin;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj VarUse, MyArray, Designator;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Term;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj FuncCall;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj MyArrayName;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Expr, InstArray;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj InstArray;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Expr, InstPrimitiveType;
 
 Program   ::= (Program) PROG ProgName:progName GlobalDeclList LBRACE MethDeclList RBRACE;
 
@@ -209,9 +212,23 @@ Term ::=  (MulopTerm) Term Mulop Factor
 
 Type ::=  (TypeProduction) IDENT:typeName;
 
-InstPrimitive ::= (InstPrimitive) NEW Type;
+PreHookUpCall ::= (PreHookUpCallProduction) /* epsilon */;
 
-InstArray  	  ::= (InstArrayProduction) InstPrimitive LBRACKET Expr RBRACKET;
+InstArrayInitNode ::= (InstArrayInitNodeProduction) PreHookUpCall Expr;
+
+InstArrayInitList ::= (InstArrayInitListProduction) InstArrayInitList COMMA InstArrayInitNode
+					| (InstArrayInitListNodeProduction) InstArrayInitNode
+					;
+
+InstArrayInit ::= (InstArrayInitProduction) LBRACE InstArrayInitList RBRACE
+				  |(InstArrayInitNoProduction)  /* epsilon */ 
+				  ;
+
+InstPrimitive ::= (InstPrimitiveProduction) NEW Type;
+
+InstPrimitiveType ::= (InstPrimitiveTypeProduction) InstPrimitive LBRACKET Expr;
+
+InstArray  	  ::= (InstArrayProduction) InstPrimitiveType RBRACKET InstArrayInit;
 
 Instantiation ::= (InstArr) InstArray;
 		
