@@ -6,6 +6,7 @@ import java.util.Stack;
 
 import rs.ac.bg.etf.pp1.SemanticAnalyzer.RelOperators;
 import rs.ac.bg.etf.pp1.ast.AbstractCondition;
+import rs.ac.bg.etf.pp1.ast.AbstractConditionalStatementProduction;
 import rs.ac.bg.etf.pp1.ast.AddopExpr;
 import rs.ac.bg.etf.pp1.ast.BoolFactor;
 import rs.ac.bg.etf.pp1.ast.CharFactor;
@@ -56,6 +57,7 @@ import rs.ac.bg.etf.pp1.ast.RelOpLsProduction;
 import rs.ac.bg.etf.pp1.ast.RelOpLseProduction;
 import rs.ac.bg.etf.pp1.ast.RelOpNeProduction;
 import rs.ac.bg.etf.pp1.ast.ReturnProduction;
+import rs.ac.bg.etf.pp1.ast.StartOfIfStmtProduction;
 import rs.ac.bg.etf.pp1.ast.VarUse;
 import rs.ac.bg.etf.pp1.ast.VisitorAdaptor;
 import rs.etf.pp1.mj.runtime.Code;
@@ -287,8 +289,20 @@ public class CodeGenerator extends VisitorAdaptor {
 				}
 				backPatchingForIfBlock.clear();
 			}
+			
+			public void visit(AbstractConditionalStatementProduction abstractCondStmtProd) {
+				stackForLastBackPatchingOrAddresses.pop();
+				stackForIfJumpOutAddresses.pop();
+			}
 
-			private List<Integer> lastBackPatchingOrAddresses = new LinkedList<Integer>();
+			private Stack<Stack<Integer>> stackForIfJumpOutAddresses = new Stack<Stack<Integer>>();
+			private Stack<List<Integer>> stackForLastBackPatchingOrAddresses = new Stack<List<Integer>>();
+
+			public void visit(StartOfIfStmtProduction startOfIfStmtProd) {
+				stackForLastBackPatchingOrAddresses.push(new LinkedList<Integer>());
+				stackForIfJumpOutAddresses.push(new Stack<Integer>());
+			}
+			
 			private List<Integer> lastBackPatchingOrAddressesRelOp = new LinkedList<Integer>();
 			private List<Integer> backPatchingForIfBlock = new LinkedList<Integer>();
 			
@@ -296,13 +310,13 @@ public class CodeGenerator extends VisitorAdaptor {
 			public void visit(ConditionListProduction conditionListProduction) {
 
 				//Backpatch jump address of AND STATEMENT to NEXT OR CONDITION
-				for(Integer addr : lastBackPatchingOrAddresses) {
+				for(Integer addr : stackForLastBackPatchingOrAddresses.peek()) {
 					Code.buf[addr] = (byte) ( (lastConditionPC-addr+1) >> 8);
 					Code.buf[addr+1] = (byte) (lastConditionPC-addr+1);
 				}
 
 				//Also change last CONDTERM in AND STATEMENT to JUMP INTO IF SECTION AND REVERSE THE CONDITION
-				Integer lastAndAddr = lastBackPatchingOrAddresses.get(0);
+				Integer lastAndAddr = stackForLastBackPatchingOrAddresses.peek().get(0);
 				int relOp = lastBackPatchingOrAddressesRelOp.get(0); // It is already inverted by putFalseJump, so place original		                         
 				Code.buf[lastAndAddr-1] = (byte)( Code.jcc + relOp);
 				Code.buf[lastAndAddr] = (byte) 0;
@@ -311,11 +325,11 @@ public class CodeGenerator extends VisitorAdaptor {
 				backPatchingForIfBlock.add(lastAndAddr);
 				
 				// Change slots new => old
-				lastBackPatchingOrAddresses.clear();
+				stackForLastBackPatchingOrAddresses.peek().clear();
 				lastBackPatchingOrAddressesRelOp.clear();
 				while(backPatchingAddresses.size() > 0) { // This makes addresses reverse ordered
 					int addr = backPatchingAddresses.pop();
-					lastBackPatchingOrAddresses.add(addr);
+					stackForLastBackPatchingOrAddresses.peek().add(addr);
 					relOp = backPatchingOrAddressesRelOp.pop();
 					lastBackPatchingOrAddressesRelOp.add(relOp);
 				}
@@ -325,11 +339,11 @@ public class CodeGenerator extends VisitorAdaptor {
 			int lastConditionPC;
 			// We delay to ConditionProductionList to handle
 			public void visit(ConditionProduction conditionProduction) {
-				lastBackPatchingOrAddresses.clear();
+				stackForLastBackPatchingOrAddresses.peek().clear();
 				lastBackPatchingOrAddressesRelOp.clear();
 				while(backPatchingAddresses.size() > 0) {
 					int addr = backPatchingAddresses.pop();
-					lastBackPatchingOrAddresses.add(addr);
+					stackForLastBackPatchingOrAddresses.peek().add(addr);
 					int relOp = backPatchingOrAddressesRelOp.pop();
 					lastBackPatchingOrAddressesRelOp.add(relOp);
 				}
@@ -349,28 +363,30 @@ public class CodeGenerator extends VisitorAdaptor {
 				Code.loadConst(1);
 				Code.putFalseJump(Code.eq, 0);
 				backPatchingAddresses.push(Code.pc-2);
+				backPatchingOrAddressesRelOp.push(Code.eq);
 			}
 			
-			// Ovaj stack cuva adrese za backpatching svega unutar if-a za +3 jer gadja  jmp else-sa umesto instrukciju posle njega
+			// backpatchujemo sve instrukcije koje treba da preskoce IF blok
 			public void visit(IfStatementProduction ifStatProd) {
-				for(Integer addr : lastBackPatchingOrAddresses) {
+				for(Integer addr : stackForLastBackPatchingOrAddresses.peek()) {
 					Code.fixup(addr);
 				}
 			}
 			
-			private Stack<Integer> ifJumpOutAddress = new Stack<Integer>();
-			// Ovde dodajemo backpatching za else jer cemo znati offset nakon koda iz else statement-a 
+			// Ovaj stack cuva adrese za backpatching svega unutar if-a za +3 jer gadja  jmp else-sa umesto instrukciju posle njega
 			public void visit(ElseStatementProduction elseStatProd) {
+				// Bezuslovni skok za preskakanje ELSE bloka
 				Code.putJump(0);
-				ifJumpOutAddress.push(Code.pc-2);
-				for(Integer addr : lastBackPatchingOrAddresses) {
+				stackForIfJumpOutAddresses.peek().push(Code.pc-2);
+				//Peglanje za +3 preko ovog jump-a
+				for(Integer addr : stackForLastBackPatchingOrAddresses.peek()) {
 					Code.buf[addr+1] += 3;
 				}
 			}
 			
-			// Ovde backpatchujem sve adrese iz IF-a za +3 bajta
+			// Ovde ispravimo instrukciju JMP koja preskace ELSE blok 
 			public void visit(ConditionalIfElseStatementProduction p) {
-				Code.fixup(ifJumpOutAddress.pop());
+				Code.fixup(stackForIfJumpOutAddresses.peek().pop());
 			}
 			
 			int relOp = -1;

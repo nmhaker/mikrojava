@@ -71,7 +71,7 @@ nonterminal ParameterList, Parameter, ArgList, OptionalArgs;
 nonterminal MethType, EnumDecl, FuncCallName;
 nonterminal InstArrayInitList, InstArrayInitNode, InstArrayInit;
 nonterminal PreHookUpCall;
-nonterminal AbstractCondition, ConditionalStatement, Condition, CondTerm, CondFact, RelOp, FirstCondFact, SecondCondFact, IfStatement, ElseStatement;
+nonterminal AbstractCondition, AbstractConditionalStatement, ConditionalStatement, Condition, CondTerm, CondFact, RelOp, FirstCondFact, SecondCondFact, IfStatement, ElseStatement, StartOfIfStatement;
 nonterminal ForLoopStatement, OptionalForPrecondition, OptionalForCondition, OptionalForPostcondition;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, EnumUse, MethBegin;
@@ -183,7 +183,7 @@ PrintStmt ::=  (PrintStmtProduction) PRINT LPAREN Expr:printExpr PrintParam RPAR
 			;
 		
 Statement ::=	(DesigStatement) DesignatorStatement SEMI
-			|	(Cond) ConditionalStatement
+			|	(Cond) AbstractConditionalStatement
 			|	(For) ForLoopStatement
 			|   (Break) BREAK SEMI
 			|   (Continue) CONTINUE SEMI
@@ -278,9 +278,11 @@ Mulop  ::= (MulMulop) MUL
 		|  (ModMulop) MOD
 		;
 			
-IfStatement ::= (IfStatementProduction) IF LPAREN AbstractCondition RPAREN Statement ;
+StartOfIfStatement ::= (StartOfIfStmtProduction) IF LPAREN;
+IfStatement ::= (IfStatementProduction) StartOfIfStatement AbstractCondition RPAREN Statement ;
 ElseStatement ::= (ElseStatementProduction) IfStatement ELSE;
 
+AbstractConditionalStatement ::= (AbstractConditionalStatementProduction) ConditionalStatement;
 ConditionalStatement ::= (ConditionalIfStatementProduction) IfStatement
 				     |   (ConditionalIfElseStatementProduction) ElseStatement Statement
 				     ;

@@ -36,16 +36,31 @@ program prog
 		
 		fleg = true;
 		
-//		if(fleg == false){
-//			print(5);	
-//		}
+		if(fleg != true){
+			if(niz1[0] != 2){
+				print('a');	
+			}else{
+				print('b');	
+			}	
+		}else{
+			if(niz2[0] == 3){
+				print('c');	
+				if(fleg) print('d');	
+			}	
+		}
+		
 		
 		if(fleg != false && x == 1 || x == 2 && x <= 3 || fleg == true && proba == 'a'){
-			print(6);	
+
+			if(fleg != false && x == 1 || x == 2 && x <= 3 || fleg == true && proba == 'a'){
+				print(6);	
+			}else{
+				print(7);	
+			}
+
 		}else{
-			print(7);	
+			print(8);	
 		}
-	
 
 		print('*');		
 
