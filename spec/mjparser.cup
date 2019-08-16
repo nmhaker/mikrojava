@@ -54,6 +54,8 @@ terminal String IDENT;
 terminal Integer NUMBER;
 terminal boolean BOOL;
 terminal String CHARCONST;
+terminal IF, ELSE, FOR, BREAK, CONTINUE, OR, AND, EQ, NE, GR, GRE, LS, LSE;
+
 
 nonterminal Statement, StatementList, DesignatorStatement;
 nonterminal SignedTerm, Factor, Instantiation;
@@ -69,6 +71,8 @@ nonterminal ParameterList, Parameter, ArgList, OptionalArgs;
 nonterminal MethType, EnumDecl, FuncCallName;
 nonterminal InstArrayInitList, InstArrayInitNode, InstArrayInit;
 nonterminal PreHookUpCall;
+nonterminal AbstractCondition, ConditionalStatement, Condition, CondTerm, CondFact, RelOp, FirstCondFact, SecondCondFact, IfStatement, ElseStatement;
+nonterminal ForLoopStatement, OptionalForPrecondition, OptionalForCondition, OptionalForPostcondition;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, EnumUse, MethBegin;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj VarUse, MyArray, Designator;
@@ -77,6 +81,8 @@ nonterminal rs.etf.pp1.symboltable.concepts.Obj FuncCall;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj MyArrayName;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj InstArray;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Expr, InstPrimitiveType;
+
+precedence left ELSE;
 
 Program   ::= (Program) PROG ProgName:progName GlobalDeclList LBRACE MethDeclList RBRACE;
 
@@ -93,7 +99,7 @@ GlobalDecl ::= (GVarDeclList) GlobalVarDecl
 
 GlobalVarDecl  ::=  (GVarDecl) VarDecl
 				| 	(GlobalVarDeclErrorComma) error COMMA:l {: parser.report_error("Izvrsen oporavak do prvog ',' u deklaraciji promenljive", null); :} 
-				|   (GlobalVarDeclErrorSemi) error SEMI:l {: parser.report_error("Izvrsen oporavak do prve ';' u deklaraciji promneljive", null); :} 
+				|   (GlobalVarDeclErrorSemi) error SEMI:l {: parser.report_error("Izvrsen oporavak do prve ';' u deklaraciji promenljive", null); :} 
 				;
 
 VarDeclList ::= (VarDeclListProduction) VarDeclList VarDecl
@@ -128,8 +134,11 @@ Parameter ::= (ParameterVarProduction) Type IDENT:paramName
 				
 ParameterList ::= (MultipleParameterListProduction) Parameter COMMA ParameterList
 			  |   (SingleParameterListProduction) Parameter
+			  |   (ParameterListErrorComma) error COMMA:l {: parser.report_error("Izvrsen oporavak do prvog ',' u deklaraciji formalnog parametra", null); :}
+			  |   (ParameterListErrorRparen) error RPAREN:l {: parser.report_error("Izvrsen oporavak do prve ')' u deklaraciji formalnog parametra", null); :} 
 			  |   /* epsilon */
 			  ;
+
 MethType ::= (NonVoidMethType) Type
 		 |	 (VoidMethType) VOID 
 		 ;				
@@ -137,7 +146,7 @@ MethType ::= (NonVoidMethType) Type
 MethBegin ::= (MethBegin) MethType IDENT:methodName;
 
 MethDecl ::= (MethDecl) MethBegin LPAREN ParameterList RPAREN VarDeclList LBRACE StatementList RBRACE
-		;
+		 ;
 
 ArrayDecl ::= (ArrayDecl) IDENT:arrayName LBRACKET RBRACKET ;
 
@@ -172,8 +181,13 @@ PrintParam ::= (PrintParamProduction) COMMA NUMBER
 			;
 PrintStmt ::=  (PrintStmtProduction) PRINT LPAREN Expr:printExpr PrintParam RPAREN 
 			;
-
+		
 Statement ::=	(DesigStatement) DesignatorStatement SEMI
+			|	(Cond) ConditionalStatement
+			|	(For) ForLoopStatement
+			|   (Break) BREAK SEMI
+			|   (Continue) CONTINUE SEMI
+			|   (InnerStatementProd) LBRACE StatementList RBRACE
 		  	|   (ReadCall) READ LPAREN Designator RPAREN SEMI
 		  	|	(PrintCall) PrintStmt SEMI
 		  	|   (MethCall) FuncCall SEMI
@@ -264,3 +278,51 @@ Mulop  ::= (MulMulop) MUL
 		|  (ModMulop) MOD
 		;
 			
+IfStatement ::= (IfStatementProduction) IF LPAREN AbstractCondition RPAREN Statement ;
+ElseStatement ::= (ElseStatementProduction) IfStatement ELSE;
+
+ConditionalStatement ::= (ConditionalIfStatementProduction) IfStatement
+				     |   (ConditionalIfElseStatementProduction) ElseStatement Statement
+				     ;
+
+AbstractCondition ::= (AbstractCondition) Condition;
+
+Condition ::= (ConditionListProduction) Condition OR CondTerm
+			| (ConditionProduction) CondTerm
+			;				     
+			
+CondTerm  ::= (CondTermListProduction) CondTerm AND CondFact
+			| (CondTermProduction) CondFact
+			;
+			
+FirstCondFact ::= (FirstCondFactProduction) Expr;			
+SecondCondFact ::= (SecondCondFactProduction) Expr;
+		
+CondFact  ::= (CondFactProduction) FirstCondFact RelOp SecondCondFact
+		    | (CondFactBoolProduction) Expr
+		    ;
+
+RelOp     ::= (RelOpEqProduction) EQ 
+		  |	  (RelOpNeProduction) NE
+		  |	  (RelOpGrProduction) GR
+		  |   (RelOpGreProduction) GRE
+		  |   (RelOpLsProduction) LS
+		  |   (RelOpLseProduction) LSE
+		  ;
+		  
+ForLoopStatement ::= (ForLoopStatementProduction) FOR LPAREN OptionalForPrecondition SEMI OptionalForCondition SEMI OptionalForPostcondition RPAREN Statement ;
+
+OptionalForPrecondition ::= (OptionalForPreconditionProduction) DesignatorStatement
+						|	(OptionalForPreconditionEpsilonProd) /* epsilon */
+						;
+
+OptionalForCondition    ::= (OptionalForConditionProduction) AbstractCondition
+						|   (OptionalForConditionEpsilonProd) /* epsilon */
+						;
+						
+OptionalForPostcondition ::= (OptionalForPostconditionProduction) DesignatorStatement
+						 |   (OptionalForPostconditionEpsilonProd) /* epsilon */ 
+						 ;						
+						 
+				
+

@@ -367,6 +367,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
 		private boolean leftSideIsEnum = false;
 		private Struct leftEnumType = null;
+		private boolean varWasArrayType = false;
 
 		public void visit(VarUse varUse) {
 			MySTDump mystdump = new MySTDump();
@@ -377,9 +378,15 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				errorDetected = true;
 			}
 			usingVarType = varObj.getType();
+			// To be aware if array identifier is being use without brackets
+			if(usingVarType.getKind() == Struct.Array)
+				varWasArrayType = true;
+			else 
+				varWasArrayType = false;
 			//Za slucaj kad imamo niz koji je tipa Enum, potrebno je jedan nivo apstrakcije izvuci iz tipa
-			if(usingVarType.getKind() == Struct.Array && usingVarType.getElemType().getKind()==Struct.Enum)
+			if(usingVarType.getKind() == Struct.Array && usingVarType.getElemType().getKind()==Struct.Enum) {
 				usingVarType = usingVarType.getElemType();
+			}
 			if(!isRightSideOfAssignment && (usingVarType.getKind() == Struct.Enum) ) {
 				leftSideIsEnum = true;
 				leftEnumType = usingVarType;
@@ -785,7 +792,73 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		public void visit(GroupFactor groupFactor) {
 			factorType = exprType;
 		}
+		
+	// KONTROLNE STRUKTURE
+		public void visit(CondFactBoolProduction condFactBoolProd) {
+			if(exprType.getKind() != Struct.Bool) {
+				report_error("Izraz iskoriscen za ispitivanje uslova nije promenljiva BOOL tipa", condFactBoolProd);
+				errorDetected = true;
+			}
+		}
+	
+		private Struct firstCondFactType = null;
+		private boolean firstCondWasArray = false;
+		public void visit(FirstCondFactProduction firstCondFact) {
+			firstCondFactType = exprType;
+			firstCondWasArray = varWasArrayType;	
+		}
 
+		private Struct secondCondFactType = null;
+		private boolean secondCondWasArray = false;
+		public void visit(SecondCondFactProduction secondCondFact) {
+			secondCondFactType = exprType;
+			secondCondWasArray = varWasArrayType;
+		}
+
+		public void visit(CondFactProduction condFactProd) {
+			if(!firstCondFactType.compatibleWith(secondCondFactType)) {
+				report_error("Tipovi korisceni u IF-u nisu kompatibilni", condFactProd);
+				errorDetected = true;
+			}
+			if(firstCondWasArray || secondCondWasArray) {
+				if(!(firstCondWasArray && secondCondWasArray)) {
+					report_error("Unutar IF-a potrebno je da oba iskaza budu nizovi", condFactProd);
+					errorDetected = true;
+				}else {
+					if( !(relOp == RelOperators.EQ || relOp == RelOperators.NE) ) {
+						report_error("Podrzani operatori za ispitivanje nizova su  ,,==,, i ,,!=,, ", condFactProd);
+						errorDetected = true;
+					}
+				}
+			}
+		}
+		
+		
+		// RELACIONI OPERATORI
+
+			enum RelOperators { EQ, NE, LS, LSE, GR, GRE } 
+			RelOperators relOp;
+
+			public void visit(RelOpEqProduction r) {
+				relOp = RelOperators.EQ;
+			}
+			public void visit(RelOpNeProduction r) {
+				relOp = RelOperators.NE;
+			}
+			public void visit(RelOpGrProduction r) {
+				relOp = RelOperators.GR;
+			}
+			public void visit(RelOpGreProduction r) {
+				relOp = RelOperators.GRE;
+			}
+			public void visit(RelOpLsProduction r) {
+				relOp = RelOperators.LS;
+			}
+			public void visit(RelOpLseProduction r) {
+				relOp = RelOperators.LSE;
+			}
+	
+	
 	// Syntax info getters
 	public int getNumOfGlobalVariables() {
 		return numOfGlobalVarsDefined;

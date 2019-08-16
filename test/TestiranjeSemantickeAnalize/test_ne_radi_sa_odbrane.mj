@@ -4,40 +4,51 @@ program prog
 	
 	int x, niz2[];
 	char y;	
+	
+	const char proba = 'a';
 	const int a1 = 2 , a3 = 6;
 	
 	enum Boja { CRNO, BELO, CRVENO }
+	enum Smer { LEVO, DESNO, GORE }
+	
+	bool fleg;
 	
 	Boja niz3[];
 	
 {
 
-	int inc(int x) {
+	int inc(int  x) {
 		return x + 1;	
 	}
 	
+	void arrArg(int niz[]){
+		print(niz[0]);
+	}
+	
 	void main() {
-		
-		x = 5;
-		niz1 = new int[3]{ 4, x, inc(5) };
+	
+		niz1 = new int[5];
+		niz2 = new int[6];	
+		x = 1;
 
-		niz2 = new int[1]{ 99 };
+		niz1[0] = 2;
+		niz2[0] = 3;
 		
-		niz3 = new Boja[5];	
+		fleg = true;
 		
-		niz3[0] = Boja.CRNO;
-		niz3[1] = Boja.BELO;
+//		if(fleg == false){
+//			print(5);	
+//		}
 		
-		niz1[0] = Boja.CRNO;
-		
-		print(niz3[0]);
-		print(niz3[1]);
-		
-		print(niz2[0]);
-		
-		print(niz1[0]);
-		print(niz1[1]);
-		print(niz1[2]);
+		if(fleg != false && x == 1 || x == 2 && x <= 3 || fleg == true && proba == 'a'){
+			print(6);	
+		}else{
+			print(7);	
+		}
+	
+
+		print('*');		
+
 	}
 	
 }

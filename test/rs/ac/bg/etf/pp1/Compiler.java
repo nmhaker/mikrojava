@@ -25,7 +25,7 @@ public class Compiler {
 	
 	private static boolean testPassed = false;
 	
-	private static final boolean debugAST = false;
+	private static final boolean debugAST = true;
 	
 	public static void testirajSintaksnuAnalizu(Logger log) {
 		BufferedReader br = null;
