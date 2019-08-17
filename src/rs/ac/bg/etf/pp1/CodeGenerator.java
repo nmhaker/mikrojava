@@ -48,8 +48,11 @@ import rs.ac.bg.etf.pp1.ast.MyArray;
 import rs.ac.bg.etf.pp1.ast.MyArrayDesignator;
 import rs.ac.bg.etf.pp1.ast.MyArrayName;
 import rs.ac.bg.etf.pp1.ast.NumberFactor;
+import rs.ac.bg.etf.pp1.ast.OptionalForConditionEpsilonProd;
 import rs.ac.bg.etf.pp1.ast.OptionalForConditionProduction;
+import rs.ac.bg.etf.pp1.ast.OptionalForPostconditionEpsilonProd;
 import rs.ac.bg.etf.pp1.ast.OptionalForPostconditionProduction;
+import rs.ac.bg.etf.pp1.ast.OptionalForPreconditionEpsilonProd;
 import rs.ac.bg.etf.pp1.ast.OptionalForPreconditionProduction;
 import rs.ac.bg.etf.pp1.ast.PlusAddop;
 import rs.ac.bg.etf.pp1.ast.PrintCall;
@@ -220,16 +223,35 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	public void visit(DesStatInc desStatInc) {
 		Code.pc+=varBytes;
+		if(!VAR_array) {
+			Code.pc -= 1;
+			Code.load(desStatInc.getDesignator().obj);
+			Code.loadConst(desStatInc.getDesignator().obj.getAdr());
+			Code.load(new Obj(Obj.Elem, desStatInc.getDesignator().obj.getName(), desStatInc.getDesignator().obj.getType(), desStatInc.getDesignator().obj.getAdr(), desStatInc.getDesignator().obj.getLevel()));
+		}
 		Code.put(Code.const_1);
 		Code.put(Code.add);
-		Code.store(desStatInc.getDesignator().obj);
+		if(VAR_array)
+			Code.store(desStatInc.getDesignator().obj);
+		else 
+			Code.store(new Obj(Obj.Elem, desStatInc.getDesignator().obj.getName(), desStatInc.getDesignator().obj.getType(), desStatInc.getDesignator().obj.getAdr(), desStatInc.getDesignator().obj.getLevel()));
 	}
 
 	public void visit(DesStatDec desStatDec) {
 		Code.pc+=varBytes;
+		if(!VAR_array) {
+			Code.pc -= 1;
+			Code.load(new Obj(Obj.Elem, desStatDec.getDesignator().obj.getName(), desStatDec.getDesignator().obj.getType(), desStatDec.getDesignator().obj.getAdr(), desStatDec.getDesignator().obj.getLevel()));
+			Code.loadConst(desStatDec.getDesignator().obj.getAdr());
+			Code.load(new Obj(Obj.Elem, desStatDec.getDesignator().obj.getName(), desStatDec.getDesignator().obj.getType(), desStatDec.getDesignator().obj.getAdr(), desStatDec.getDesignator().obj.getLevel()));
+		}
 		Code.put(Code.const_1);
 		Code.put(Code.sub);
-		Code.store(desStatDec.getDesignator().obj);
+		if(VAR_array)
+			Code.store(desStatDec.getDesignator().obj);
+		else {
+			Code.store(new Obj(Obj.Elem, desStatDec.getDesignator().obj.getName(), desStatDec.getDesignator().obj.getType(), desStatDec.getDesignator().obj.getAdr(), desStatDec.getDesignator().obj.getLevel()));
+		}
 	}
 	
 	public void visit(EnumUse enumUse) {
@@ -422,7 +444,13 @@ public class CodeGenerator extends VisitorAdaptor {
 			
 			Code.putJump(postAddrStack.peek());
 			
-			Code.fixup(stackForLastBackPatchingOrAddresses.peek().get(0));
+			for(Integer addr : stackForLastBackPatchingOrAddresses.peek()) {
+				Code.fixup(addr);
+			}
+			
+			for(Integer addr : stackForIfJumpOutAddresses.peek()) {
+				Code.fixup(addr);
+			}
 			
 			stackForLastBackPatchingOrAddresses.pop();
 			stackForIfJumpOutAddresses.pop();					
@@ -441,6 +469,10 @@ public class CodeGenerator extends VisitorAdaptor {
 			condAddrStack.push(Code.pc);
 		}
 		
+		public void visit(OptionalForPreconditionEpsilonProd optForPrecondEpsProd) {
+			condAddrStack.push(Code.pc);
+		}
+		
 		private Stack<Integer> postAddrStack = new Stack<Integer>();
 		private Stack<Integer> jumpInForStack = new Stack<Integer>();
 		public void visit(OptionalForConditionProduction optForCondProd) {
@@ -452,19 +484,36 @@ public class CodeGenerator extends VisitorAdaptor {
 			postAddrStack.push(Code.pc);
 		}
 		
+		public void visit(OptionalForConditionEpsilonProd optForCondEpsPro) {
+			Code.putJump(0);
+			jumpInForStack.push(Code.pc-2);
+
+			postAddrStack.push(Code.pc);
+		}
+		
 		public void visit(OptionalForPostconditionProduction optForPostProd) {
 			
 			Code.putJump(condAddrStack.peek());
 			
 			Code.fixup(jumpInForStack.pop());
+
 		}	
+		
+		public void visit(OptionalForPostconditionEpsilonProd optForPostcondEpsProd) {
+
+			Code.putJump(condAddrStack.peek());
+			
+			Code.fixup(jumpInForStack.pop());
+
+		}
 		
 
 		public void visit(BreakProduction breakProd) {
-			
+			Code.putJump(0);
+			stackForIfJumpOutAddresses.peek().push(Code.pc-2);
 		}
 
 		public void visit(ContinueProduction contProd) {
-			
+			Code.putJump(postAddrStack.peek());
 		}
 }

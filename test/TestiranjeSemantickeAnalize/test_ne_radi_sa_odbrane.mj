@@ -3,7 +3,7 @@ program prog
 	int niz1[];
 	
 	int x, niz2[];
-	char y;	
+	int y;	
 	
 	const char proba = 'a';
 	const int a1 = 2 , a3 = 6;
@@ -27,16 +27,20 @@ program prog
 	
 	void main() {
 	
+	
 		niz1 = new int[5];
 		niz2 = new int[6];	
 
-		x = 1;
+		niz1[0]++;
 
-		niz1[0] = 2;
 		niz2[0] = 3;
 		
-		for(x=1; x<=5; x++){
+		for(;  ; x++){
 			print(x);
+			for(y=0; y<5; y++){
+				if(y%2 == 0)
+					print(y);
+			}
 		}
 		
 		print('*');		
