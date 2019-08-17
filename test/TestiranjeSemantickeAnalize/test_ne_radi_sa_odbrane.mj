@@ -27,23 +27,15 @@ program prog
 	
 	void main() {
 	
+		x = 2;
 	
 		niz1 = new int[5];
-		niz2 = new int[6];	
-
-		niz1[0]++;
-
-		niz2[0] = 3;
 		
-		for(;  ; x++){
-			print(x);
-			for(y=0; y<5; y++){
-				if(y%2 == 0)
-					print(y);
-			}
-		}
-		
-		print('*');		
+		niz1[3] = 2;
+
+		niz1[inc(x)]--;
+
+		print(niz1[3]);		
 
 	}
 	

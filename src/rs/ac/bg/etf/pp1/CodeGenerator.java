@@ -132,13 +132,10 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.load(arrayObjName);
 	}
 
-	private int arrayBytes = 0;
-	private Struct myArrayType = null;
 	public void visit(MyArray myArray) {
 		int oldPc = Code.pc;
 		Code.load(new Obj(Obj.Elem, myArray.obj.getName(), myArray.obj.getType(), myArray.obj.getAdr(), myArray.obj.getLevel()));
 		varBytes = Code.pc - oldPc;
-		myArrayType = myArray.obj.getType();
 	}
 	
 	public void visit(CharFactor charFactor) {
@@ -224,9 +221,8 @@ public class CodeGenerator extends VisitorAdaptor {
 	public void visit(DesStatInc desStatInc) {
 		Code.pc+=varBytes;
 		if(!VAR_array) {
-			Code.pc -= 1;
-			Code.load(desStatInc.getDesignator().obj);
-			Code.loadConst(desStatInc.getDesignator().obj.getAdr());
+			Code.pc-=1;
+			Code.put(Code.dup2);
 			Code.load(new Obj(Obj.Elem, desStatInc.getDesignator().obj.getName(), desStatInc.getDesignator().obj.getType(), desStatInc.getDesignator().obj.getAdr(), desStatInc.getDesignator().obj.getLevel()));
 		}
 		Code.put(Code.const_1);
@@ -241,8 +237,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.pc+=varBytes;
 		if(!VAR_array) {
 			Code.pc -= 1;
-			Code.load(new Obj(Obj.Elem, desStatDec.getDesignator().obj.getName(), desStatDec.getDesignator().obj.getType(), desStatDec.getDesignator().obj.getAdr(), desStatDec.getDesignator().obj.getLevel()));
-			Code.loadConst(desStatDec.getDesignator().obj.getAdr());
+			Code.put(Code.dup2);
 			Code.load(new Obj(Obj.Elem, desStatDec.getDesignator().obj.getName(), desStatDec.getDesignator().obj.getType(), desStatDec.getDesignator().obj.getAdr(), desStatDec.getDesignator().obj.getLevel()));
 		}
 		Code.put(Code.const_1);
