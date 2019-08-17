@@ -72,7 +72,7 @@ nonterminal MethType, EnumDecl, FuncCallName;
 nonterminal InstArrayInitList, InstArrayInitNode, InstArrayInit;
 nonterminal PreHookUpCall;
 nonterminal AbstractCondition, AbstractConditionalStatement, ConditionalStatement, Condition, CondTerm, CondFact, RelOp, FirstCondFact, SecondCondFact, IfStatement, ElseStatement, StartOfIfStatement;
-nonterminal ForLoopStatement, OptionalForPrecondition, OptionalForCondition, OptionalForPostcondition;
+nonterminal ForLoopStatement, OptionalForPrecondition, OptionalForCondition, OptionalForPostcondition, StartOfForLoop;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, EnumBegin, EnumUse, MethBegin;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj VarUse, MyArray, Designator;
@@ -185,8 +185,8 @@ PrintStmt ::=  (PrintStmtProduction) PRINT LPAREN Expr:printExpr PrintParam RPAR
 Statement ::=	(DesigStatement) DesignatorStatement SEMI
 			|	(Cond) AbstractConditionalStatement
 			|	(For) ForLoopStatement
-			|   (Break) BREAK SEMI
-			|   (Continue) CONTINUE SEMI
+			|   (BreakProduction) BREAK SEMI
+			|   (ContinueProduction) CONTINUE SEMI
 			|   (InnerStatementProd) LBRACE StatementList RBRACE
 		  	|   (ReadCall) READ LPAREN Designator RPAREN SEMI
 		  	|	(PrintCall) PrintStmt SEMI
@@ -312,7 +312,8 @@ RelOp     ::= (RelOpEqProduction) EQ
 		  |   (RelOpLseProduction) LSE
 		  ;
 		  
-ForLoopStatement ::= (ForLoopStatementProduction) FOR LPAREN OptionalForPrecondition SEMI OptionalForCondition SEMI OptionalForPostcondition RPAREN Statement ;
+StartOfForLoop ::= (StartOfForLoopProduction) FOR LPAREN;
+ForLoopStatement ::= (ForLoopStatementProduction) StartOfForLoop OptionalForPrecondition SEMI OptionalForCondition SEMI OptionalForPostcondition RPAREN Statement ;
 
 OptionalForPrecondition ::= (OptionalForPreconditionProduction) DesignatorStatement
 						|	(OptionalForPreconditionEpsilonProd) /* epsilon */

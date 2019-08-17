@@ -858,6 +858,30 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				relOp = RelOperators.LSE;
 			}
 	
+		// FOR PETLJA
+			
+			public void visit(ForLoopStatementProduction forLoopStatementProd) {
+				forLoopStarted = false;
+			}
+			
+			public void visit(BreakProduction breakProd) {
+				if(!forLoopStarted) {
+					report_error("Break naredba je van FOR petlje!", breakProd);
+					errorDetected = true;
+				}
+			}
+			
+			public void visit(ContinueProduction contProd) {
+				if(!forLoopStarted) {
+					report_error("Continue naredba je van FOR petlje!", contProd);
+					errorDetected = true;
+				}
+			}
+			
+			private boolean forLoopStarted = false;
+			public void visit(StartOfForLoopProduction startOfForLoopProd) {
+				forLoopStarted = true;
+			}
 	
 	// Syntax info getters
 	public int getNumOfGlobalVariables() {
