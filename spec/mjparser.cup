@@ -24,8 +24,8 @@ parser code {:
 		report_fatal_error("Fatalna greska, parsiranje se ne moze nastaviti", cur_token);	
 	}
 	
-	public void report_error(String message, Object info) {
-		errorDetected = true;
+	public void report_error(String message, Object info, boolean setError) {
+		errorDetected = setError;
 		StringBuilder msg = new StringBuilder(message);
 		if(info instanceof Symbol)
 			msg.append(" na liniji ").append( ((Symbol)info).left );		
@@ -89,7 +89,7 @@ Program   ::= (Program) PROG ProgName:progName GlobalDeclList LBRACE MethDeclLis
 ProgName ::= (ProgName) IDENT:progName;
 
 GlobalDeclList ::= (GlobalDeclListProduction) GlobalDeclList GlobalDecl
-				|  /* epsilon */
+				|  (GlobalDeclListEpsProduction) /* epsilon */
 				;
 
 GlobalDecl ::= (GVarDeclList) GlobalVarDecl
@@ -97,26 +97,26 @@ GlobalDecl ::= (GVarDeclList) GlobalVarDecl
 			|  (GConstDeclList) ConstDecl
 			;
 
-GlobalVarDecl  ::=  (GVarDecl) VarDecl
-				| 	(GlobalVarDeclErrorComma) error COMMA:l {: parser.report_error("Izvrsen oporavak do prvog ',' u deklaraciji promenljive", null); :} 
-				|   (GlobalVarDeclErrorSemi) error SEMI:l {: parser.report_error("Izvrsen oporavak do prve ';' u deklaraciji promenljive", null); :} 
+GlobalVarDecl  ::=  (GVarDecl) VarDecl SEMI
+				|   (GlobalVarDeclErrorSemi) error SEMI {: parser.report_error("Izvrsen oporavak do prve ';' u deklaraciji promenljive", null, false); :} 
 				;
 
-VarDeclList ::= (VarDeclListProduction) VarDeclList VarDecl
-				| /* epsilon */
-				;
-			
+
 MultipleVarDeclExpr ::= (SimpleVarDecl) IDENT:varName
 					|   (SimpleArrayDecl) ArrayDecl
 					;
 					 			
 MultipleVarDecl ::= (MultipleVarDeclProduction) MultipleVarDeclExpr COMMA MultipleVarDecl
 				| 	(SingleVarDeclProduction) MultipleVarDeclExpr
+				| 	(GlobalVarDeclErrorComma) error {: parser.report_error("Izvrsen oporavak do prvog ';' u deklaraciji promenljive", null, false); :} 
 				; 
 
-VarDecl  ::= (MultipleVariableDecl) Type:varType MultipleVarDecl SEMI
+VarDecl  ::= (MultipleVariableDecl) Type:varType MultipleVarDecl 
 		 ;
 
+VarDeclList ::= (VarDeclListProduction) VarDeclList VarDecl
+				| (VarDeclListEpsProduction) /* epsilon */
+				;
 MethDeclList ::= (MethDeclListProduction) MethDeclList MethDecl
             |   /* epsilon */
 			;
