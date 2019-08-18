@@ -443,12 +443,13 @@ public class CodeGenerator extends VisitorAdaptor {
 				Code.fixup(addr);
 			}
 			
-			for(Integer addr : stackForIfJumpOutAddresses.peek()) {
+			for(Integer addr : stackForBreakStack.peek()) {
 				Code.fixup(addr);
 			}
 			
 			stackForLastBackPatchingOrAddresses.pop();
 			stackForIfJumpOutAddresses.pop();					
+			stackForBreakStack.pop();
 			
 			condAddrStack.pop();
 			postAddrStack.pop();
@@ -457,6 +458,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		public void visit(StartOfForLoopProduction startOfForLoopProd) {	
 			stackForLastBackPatchingOrAddresses.push(new LinkedList<Integer>());
 			stackForIfJumpOutAddresses.push(new Stack<Integer>());
+			stackForBreakStack.push(new Stack<Integer>());
 		}
 
 		private Stack<Integer> condAddrStack = new Stack<Integer>();
@@ -503,9 +505,10 @@ public class CodeGenerator extends VisitorAdaptor {
 		}
 		
 
+		private Stack<Stack<Integer>> stackForBreakStack = new Stack<Stack<Integer>>();
 		public void visit(BreakProduction breakProd) {
 			Code.putJump(0);
-			stackForIfJumpOutAddresses.peek().push(Code.pc-2);
+			stackForBreakStack.peek().push(Code.pc-2);
 		}
 
 		public void visit(ContinueProduction contProd) {

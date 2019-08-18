@@ -114,7 +114,7 @@
 		</java>		
 	</target>	
 
-	<target name="disasmJavni">
+	<target name="disasmJavniA">
 		<java classname="rs.etf.pp1.mj.runtime.disasm">
 			<arg value="test/test301.obj" />
 			<classpath>
@@ -123,6 +123,14 @@
 		</java>		
 	</target>	
 
+	<target name="disasmJavniB">
+		<java classname="rs.etf.pp1.mj.runtime.disasm">
+			<arg value="test/test302.obj" />
+			<classpath>
+				<pathelement location="lib/mj-runtime.jar" />
+			</classpath>
+		</java>	
+	</target>	
 
 	<target name="runTestSemanticka" depends="disasmSemanticka">
 		<java classname="rs.etf.pp1.mj.runtime.Run">
@@ -137,12 +145,20 @@
 				<pathelement location="lib/mj-runtime.jar" />
 			</classpath>
 		</java>			
-		
 	</target>
 
-	<target name="runJavniTest" depends="disasmJavni">
+	<target name="runJavniTestA" depends="disasmJavniA">
 		<java classname="rs.etf.pp1.mj.runtime.Run">
 			<arg value="test/test301.obj" />
+			<classpath>
+				<pathelement location="lib/mj-runtime.jar" />
+			</classpath>
+		</java>		
+	</target>
+	
+	<target name="runJavniTestB" depends="disasmJavniB">
+		<java classname="rs.etf.pp1.mj.runtime.Run">
+			<arg value="test/test302.obj" />
 			<classpath>
 				<pathelement location="lib/mj-runtime.jar" />
 			</classpath>

@@ -458,6 +458,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 	// SEMANTIKA ISKAZA
 		
+		public void visit(DesigStatement desigStat) {
+			enumFactorUsed = false;
+		}
+		
 		private boolean isRightSideOfAssignment = false;
 		// Provera ++ i -- operatora nad INT tipom
 		private Struct designatorType = null;
@@ -525,6 +529,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				errorDetected = true;
 			}
 			report_info("Detektovan poziv READ metode", readCall);
+			leftSideIsEnum = false;
 		}
 		
 		// printCall metoda ocekuje int/char/bool Expr
@@ -536,12 +541,14 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				errorDetected = true;
 			}
 			report_info("Detektovan poziv PRINT metode", printCall);
+			leftSideIsEnum = false;
+			enumFactorUsed = false;
 		}
 	
 		private Integer argCounter = 0;
 		private Stack<Integer> argCounterStack = new Stack<Integer>();
-		private List<Struct> argTypes = new LinkedList<Struct>();
-		private Stack<List<Struct>> argTypesStack = new Stack<List<Struct>>();
+		private List<ArgStructure> argTypes = new LinkedList<ArgStructure>();
+		private Stack<List<ArgStructure>> argTypesStack = new Stack<List<ArgStructure>>();
 		
 		public void visit(ArgumentListExprProduction argListExprProd) {
 			prepareArg();
@@ -555,11 +562,24 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			argCounter = argCounter + 1;
 			argCounterStack.push(argCounter);
 			argTypes = argTypesStack.pop();
-			argTypes.add(exprType);
+			argTypes.add(new ArgStructure(exprType, varWasArrayType, leftSideIsEnum));
 			argTypesStack.push(argTypes);
+			varWasArrayType = false;
+			leftSideIsEnum = false;
 		}
 		
+		private class ArgStructure{
+			public ArgStructure(Struct s, boolean wa, boolean we) {
+				argType = s;
+				wasArray = wa;
+				wasEnum = we;
+			}
+			public Struct argType;
+			public boolean wasArray;
+			public boolean wasEnum;
+		}
 		// Obrada poziva funkcije
+		
 		private Struct funcType = null;
 		private String funcName = null;
 		
@@ -581,21 +601,41 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			Object[] paramIter =  funcObj.getLocalSymbols().toArray();
 			int i = 0;
 			argTypes = argTypesStack.pop();
-			for(Struct t : argTypes){
+			for(ArgStructure t : argTypes){
 				Obj o = (Obj)paramIter[i++];
-				if(!t.assignableTo(o.getType())){
+				if(o.getType().getKind() == Struct.Array && o.getType().getElemType().getKind()==Struct.Enum) {
+					if(!t.wasEnum) {
+						report_error("Argument nije niz enum-a a dodeljuje se nizu enum-a", funcCall);
+						errorDetected = true;
+					}else if(!t.wasArray) {
+						report_error("Argument nije niz a dodeljuje se nizu enum-a", funcCall);
+						errorDetected = true;
+					}else if(!t.argType.assignableTo(Tab.intType)){
+						report_error("Argument nije int a dodeljuje se nizu enum-a ,tipovi se ne slazu!", funcCall);
+						errorDetected = true;
+					}
+				}else if(o.getType().getKind() == Struct.Enum) {
+					if(!enumFactorUsed) {
+						report_error("Argument funkcije nije konstanta ENUM-a!", funcCall);
+						errorDetected = true;
+					}else if(!t.argType.assignableTo(Tab.intType)){
+						report_error("Argument nije dodeljiv parametru , tipovi se ne slazu!", funcCall);
+						errorDetected = true;
+					}
+				}else if(!t.argType.assignableTo(o.getType())){
 					report_error("Argument nije dodeljiv parametru , tipovi se ne slazu!", funcCall);
 					errorDetected = true;
 				}
 			}
 			funcCall.obj = funcObj;
+			enumFactorUsed = false;
 		}
 		
 		public void visit(FuncCallName funcCallName) {
 			funcName = funcCallName.getFuncName();
 			funcNameStack.push(funcName);
 			argCounterStack.push(new Integer(0));
-			argTypesStack.push(new LinkedList<Struct>());
+			argTypesStack.push(new LinkedList<ArgStructure>());
 		}
 		
 		// Obrada TERM-a 
@@ -603,7 +643,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		private Struct termType = null;
 		public void visit(FactorTerm factorTerm) {
 			termType = factorType;
-			if(leftSideIsEnum && !enumFactorUsed) {
+			if(leftSideIsEnum && !enumFactorUsed && isRightSideOfAssignment) {
 				report_error("Koristite ne nabrojivu konstantu u dodeli za enum", factorTerm);
 				errorDetected = true;
 			}
@@ -794,6 +834,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		}
 		
 	// KONTROLNE STRUKTURE
+		
+		public void visit(AbstractCondition abstrCond) {
+			leftSideIsEnum = false;
+			enumFactorUsed = false;
+		}
+		
 		public void visit(CondFactBoolProduction condFactBoolProd) {
 			if(exprType.getKind() != Struct.Bool) {
 				report_error("Izraz iskoriscen za ispitivanje uslova nije promenljiva BOOL tipa", condFactBoolProd);

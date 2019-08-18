@@ -25,7 +25,7 @@ public class Compiler {
 	
 	private static boolean testPassed = false;
 	
-	private static final boolean debugAST = true;
+	private static final boolean debugAST = false;
 	
 	public static void testirajSintaksnuAnalizu(Logger log) {
 		BufferedReader br = null;
@@ -196,13 +196,13 @@ public class Compiler {
 
 		BufferedReader br = null;
 		try {
-			final int numOfFiles = 1;
+			final int numOfFiles = 2;
 			
 			String path = "test/JavniTest/";
 			String fajlovi[] = new String[numOfFiles];
 			fajlovi[0] = "test301";
-			//fajlovi[0] = "test302";
-			//fajlovi[0] = "test303";
+			fajlovi[1] = "test302";
+			//fajlovi[2] = "test303";
 
 			File sourceCode[] = new File[numOfFiles];
 			int i = 0;

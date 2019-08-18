@@ -103,8 +103,8 @@ GlobalVarDecl  ::=  (GVarDecl) VarDecl
 				;
 
 VarDeclList ::= (VarDeclListProduction) VarDeclList VarDecl
-			| /* epsilon */
-			;
+				| /* epsilon */
+				;
 			
 MultipleVarDeclExpr ::= (SimpleVarDecl) IDENT:varName
 					|   (SimpleArrayDecl) ArrayDecl
@@ -207,7 +207,7 @@ FuncCallName ::= (FuncCallName) IDENT:funcName LPAREN;
 FuncCall  ::=  (FuncCall)  FuncCallName OptionalArgs RPAREN;
 
 DesignatorStatement ::=  (DesStatAssignment) Designator EQUAL Expr
-					  |  (DesStatAssignmentError) error:l {: parser.report_error("Izvrsen oporavak u naredbi dodele do prve ';' " , null); :}
+					  |  (DesStatAssignmentError) error:l SEMI {: parser.report_error("Izvrsen oporavak u naredbi dodele do prve ';' " , null); :}
 					  |	 (DesStatInc) Designator INC
 					  |	 (DesStatDec) Designator DEC
 					  ;
