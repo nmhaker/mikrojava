@@ -41,6 +41,7 @@ import rs.ac.bg.etf.pp1.ast.MethBegin;
 import rs.ac.bg.etf.pp1.ast.MethCall;
 import rs.ac.bg.etf.pp1.ast.MethDecl;
 import rs.ac.bg.etf.pp1.ast.MinusAddop;
+import rs.ac.bg.etf.pp1.ast.MinusTerm;
 import rs.ac.bg.etf.pp1.ast.ModMulop;
 import rs.ac.bg.etf.pp1.ast.MulMulop;
 import rs.ac.bg.etf.pp1.ast.MulopTerm;
@@ -197,6 +198,10 @@ public class CodeGenerator extends VisitorAdaptor {
 		}
 	}
 	
+	public void visit(MinusTerm minTerm) {
+		Code.put(Code.neg);
+	}
+	
 	public void visit(MulopTerm mulopTerm) {
 		Code.put(mulOpStack.pop());
 	}
@@ -315,8 +320,10 @@ public class CodeGenerator extends VisitorAdaptor {
 		}
 		
 		public void visit(AbstractConditionalStatementProduction abstractCondStmtProd) {
-			stackForLastBackPatchingOrAddresses.pop();
-			stackForIfJumpOutAddresses.pop();
+			if(!stackForLastBackPatchingOrAddresses.empty())
+				stackForLastBackPatchingOrAddresses.pop();
+			if(!stackForIfJumpOutAddresses.empty())
+				stackForIfJumpOutAddresses.pop();
 		}
 
 		private Stack<Stack<Integer>> stackForIfJumpOutAddresses = new Stack<Stack<Integer>>();

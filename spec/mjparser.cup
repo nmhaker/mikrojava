@@ -57,7 +57,7 @@ terminal String CHARCONST;
 terminal IF, ELSE, FOR, BREAK, CONTINUE, OR, AND, EQ, NE, GR, GRE, LS, LSE;
 
 
-nonterminal Statement, StatementList, DesignatorStatement;
+nonterminal Statement, StatementList, DesignatorStatement, DesignatorAssignmentStatement;
 nonterminal SignedTerm, Factor, Instantiation;
 nonterminal Addop, Mulop;
 nonterminal Program, Type;
@@ -67,7 +67,7 @@ nonterminal PrintStmt, PrintParam;
 nonterminal Return, OptionalExpr;
 nonterminal ConstExpr, ConstInitializationList, ConstDecl;
 nonterminal GlobalDeclList, GlobalDecl,  GlobalVarDecl;
-nonterminal ParameterList, Parameter, ArgList, OptionalArgs;
+nonterminal ParameterList, Parameter, ArgList, OptionalArgs, ParameterListOpt;
 nonterminal MethType, EnumDecl, FuncCallName;
 nonterminal InstArrayInitList, InstArrayInitNode, InstArrayInit;
 nonterminal PreHookUpCall;
@@ -97,21 +97,20 @@ GlobalDecl ::= (GVarDeclList) GlobalVarDecl
 			|  (GConstDeclList) ConstDecl
 			;
 
-GlobalVarDecl  ::=  (GVarDecl) VarDecl SEMI
-				|   (GlobalVarDeclErrorSemi) error SEMI {: parser.report_error("Izvrsen oporavak do prve ';' u deklaraciji promenljive", null, false); :} 
+GlobalVarDecl  ::=  (GVarDecl) VarDecl 
 				;
 
 
-MultipleVarDeclExpr ::= (SimpleVarDecl) IDENT:varName
-					|   (SimpleArrayDecl) ArrayDecl
+MultipleVarDeclExpr ::= (SimpleVarDecl) IDENT:varName 
+					|   (SimpleArrayDecl) ArrayDecl 
+					|	(MultipleVarDeclExprErrorComma) error:lcommasemi {: parser.report_error("Izvrsen oporavak do ', ili ;' u deklaraciji globalne promenljive", lcommasemi); :}
 					;
 					 			
-MultipleVarDecl ::= (MultipleVarDeclProduction) MultipleVarDeclExpr COMMA MultipleVarDecl
+MultipleVarDecl ::= (MultipleVarDeclProduction) MultipleVarDecl COMMA MultipleVarDeclExpr 
 				| 	(SingleVarDeclProduction) MultipleVarDeclExpr
-				| 	(GlobalVarDeclErrorComma) error {: parser.report_error("Izvrsen oporavak do prvog ';' u deklaraciji promenljive", null, false); :} 
 				; 
 
-VarDecl  ::= (MultipleVariableDecl) Type:varType MultipleVarDecl 
+VarDecl  ::= (MultipleVariableDecl) Type:varType MultipleVarDecl SEMI
 		 ;
 
 VarDeclList ::= (VarDeclListProduction) VarDeclList VarDecl
@@ -128,16 +127,18 @@ OptionalExpr ::= (OptionalExprProduction) Expr
 Return ::=  (ReturnProduction) RETURN OptionalExpr SEMI
 				;
 				
-Parameter ::= (ParameterVarProduction) Type IDENT:paramName
-			| (ParameterArrayProduction)  Type ArrayDecl
+Parameter ::= (ParameterVarProduction) Type IDENT:paramName 
+			| (ParameterArrayProduction)  Type ArrayDecl 
+			| (ParameterListErrorComma) error:lcommasemiparram {: parser.report_error("Izvrsen oporavak do prvog ', ili )' u deklaraciji formalnog parametra", lcommasemiparram); :}
 			;
 				
 ParameterList ::= (MultipleParameterListProduction) Parameter COMMA ParameterList
 			  |   (SingleParameterListProduction) Parameter
-			  |   (ParameterListErrorComma) error COMMA:l {: parser.report_error("Izvrsen oporavak do prvog ',' u deklaraciji formalnog parametra", null); :}
-			  |   (ParameterListErrorRparen) error RPAREN:l {: parser.report_error("Izvrsen oporavak do prve ')' u deklaraciji formalnog parametra", null); :} 
-			  |   /* epsilon */
 			  ;
+			  
+ParameterListOpt ::= (ParameterListProd) ParameterList 
+				 | (ParamEpsProd) /*epsilon*/
+				 ;
 
 MethType ::= (NonVoidMethType) Type
 		 |	 (VoidMethType) VOID 
@@ -145,7 +146,7 @@ MethType ::= (NonVoidMethType) Type
 
 MethBegin ::= (MethBegin) MethType IDENT:methodName;
 
-MethDecl ::= (MethDecl) MethBegin LPAREN ParameterList RPAREN VarDeclList LBRACE StatementList RBRACE
+MethDecl ::= (MethDecl) MethBegin LPAREN ParameterListOpt RPAREN VarDeclList LBRACE StatementList RBRACE
 		 ;
 
 ArrayDecl ::= (ArrayDecl) IDENT:arrayName LBRACKET RBRACKET ;
@@ -183,6 +184,7 @@ PrintStmt ::=  (PrintStmtProduction) PRINT LPAREN Expr:printExpr PrintParam RPAR
 			;
 		
 Statement ::=	(DesigStatement) DesignatorStatement SEMI
+			|   (DesStatError) error:desstaterror {: parser.report_error("Izvrsen oporavak u statement-u", desstaterror); :}
 			|	(Cond) AbstractConditionalStatement
 			|	(For) ForLoopStatement
 			|   (BreakProduction) BREAK SEMI
@@ -206,10 +208,13 @@ FuncCallName ::= (FuncCallName) IDENT:funcName LPAREN;
 		
 FuncCall  ::=  (FuncCall)  FuncCallName OptionalArgs RPAREN;
 
-DesignatorStatement ::=  (DesStatAssignment) Designator EQUAL Expr
-					  |  (DesStatAssignmentError) error:l SEMI {: parser.report_error("Izvrsen oporavak u naredbi dodele do prve ';' " , null); :}
-					  |	 (DesStatInc) Designator INC
-					  |	 (DesStatDec) Designator DEC
+DesignatorAssignmentStatement ::= (DesStatAssignment) Designator EQUAL Expr 
+							  |   (DesStatAssignmentError) error:desstat {: parser.report_error("Izvrsen oporavak u naredbi dodele do ;" , desstat); :}
+							  ;
+
+DesignatorStatement ::=  (DesStatAssignmentStatement) DesignatorAssignmentStatement
+					  |	 (DesStatInc) Designator INC 
+					  |	 (DesStatDec) Designator DEC 
 					  ;
 
 Expr ::=(AddopExpr) Expr Addop Term
@@ -279,15 +284,21 @@ Mulop  ::= (MulMulop) MUL
 		;
 			
 StartOfIfStatement ::= (StartOfIfStmtProduction) IF LPAREN;
-IfStatement ::= (IfStatementProduction) StartOfIfStatement AbstractCondition RPAREN Statement ;
+
+IfStatement ::= (IfStatementProduction) StartOfIfStatement AbstractCondition RPAREN Statement 
+			| (AbstractCondError) error:abstCondError RPAREN {: parser.report_error("Izvrsen oporavak unutar IF naredbe do ')'", abstCondError); :}
+			;
+
 ElseStatement ::= (ElseStatementProduction) IfStatement ELSE;
 
 AbstractConditionalStatement ::= (AbstractConditionalStatementProduction) ConditionalStatement;
+
 ConditionalStatement ::= (ConditionalIfStatementProduction) IfStatement
 				     |   (ConditionalIfElseStatementProduction) ElseStatement Statement
 				     ;
 
-AbstractCondition ::= (AbstractCondition) Condition;
+AbstractCondition ::= (AbstractCondition) Condition 
+					;
 
 Condition ::= (ConditionListProduction) Condition OR CondTerm
 			| (ConditionProduction) CondTerm
@@ -313,14 +324,14 @@ RelOp     ::= (RelOpEqProduction) EQ
 		  ;
 		  
 StartOfForLoop ::= (StartOfForLoopProduction) FOR LPAREN;
-ForLoopStatement ::= (ForLoopStatementProduction) StartOfForLoop OptionalForPrecondition SEMI OptionalForCondition SEMI OptionalForPostcondition RPAREN Statement ;
+ForLoopStatement ::= (ForLoopStatementProduction) StartOfForLoop OptionalForPrecondition OptionalForCondition OptionalForPostcondition RPAREN Statement ;
 
-OptionalForPrecondition ::= (OptionalForPreconditionProduction) DesignatorStatement
-						|	(OptionalForPreconditionEpsilonProd) /* epsilon */
+OptionalForPrecondition ::= (OptionalForPreconditionProduction) DesignatorStatement SEMI
+						|	(OptionalForPreconditionEpsilonProd) SEMI
 						;
 
-OptionalForCondition    ::= (OptionalForConditionProduction) AbstractCondition
-						|   (OptionalForConditionEpsilonProd) /* epsilon */
+OptionalForCondition    ::= (OptionalForConditionProduction) AbstractCondition SEMI
+						|   (OptionalForConditionEpsilonProd) SEMI
 						;
 						
 OptionalForPostcondition ::= (OptionalForPostconditionProduction) DesignatorStatement

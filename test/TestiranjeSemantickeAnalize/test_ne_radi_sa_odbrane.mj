@@ -2,57 +2,17 @@ program prog
 
 	int niz1[];
 	
-	const char proba = 'a';
-	const int a1 = 2 , a3 = 6;
-	
-	enum Boja { CRNO, BELO, CRVENO }
-	enum Smer { LEVO, DESNO, GORE }
-	
-	bool fleg;
-	
-	Boja niz3[];
-	Smer niz4[];
+	int x ;
 	
 {
 
-	void proba() int x; Boja lokNiz[]; {
-		lokNiz = new Boja [6];	
-		lokNiz[0] = Boja.CRVENO;
-		print(lokNiz[0]);
-	} 
-	
-	void proba2(int x, char y, Boja c, Boja b[]){
-		x = b[2];
-		print(x);
-	}
+	void main() {
 
-	int inc(int  y) {
-		return y + 1;	
-	}
-	
-	void arrArg(int niz[]){
-		print(niz[0]);
-	}
-	
-	void proba3(Boja argBoja){
-		print(argBoja);	
-	}
-	
-	void main() Boja blok; Boja nizBoja[]; {
-	
-		proba();
-		
-		niz3 = new Boja[5];
-		niz4 = new Smer[5];
-
-		niz3[2] = Boja.CRVENO;
-		
-		blok = Boja.BELO;
-		nizBoja = new Boja[4];
-		
-		proba2(3, 'a', Boja.CRNO, nizBoja);
-		
-		proba3(Boja.BELO);
+		niz1 = new int[6];
+		niz1[0] = 1;
+		x = 0;
+		x = -niz1[0] + 5;
+		print(x);	
 	}
 	
 }
