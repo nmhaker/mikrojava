@@ -3,16 +3,24 @@ program prog
 	int niz1[];
 	
 	int x ;
+
 	
 {
 
-	void main() {
+	int proba(int a) {
+		if(a==5)
+			return 5;
+	}
 
-		niz1 = new int[6];
-		niz1[0] = 1;
-		x = 0;
-		x = -niz1[0] + 5;
-		print(x);	
+	void main() {
+	
+		niz1 = new int[45];
+	
+		print(ord('A'));
+		print(chr(65));
+		print(len(niz1));	
+		
+		proba(5);
 	}
 	
 }

@@ -59,6 +59,7 @@ import rs.ac.bg.etf.pp1.ast.PlusAddop;
 import rs.ac.bg.etf.pp1.ast.PrintCall;
 import rs.ac.bg.etf.pp1.ast.PrintParamProduction;
 import rs.ac.bg.etf.pp1.ast.PrintStmtProduction;
+import rs.ac.bg.etf.pp1.ast.ProgName;
 import rs.ac.bg.etf.pp1.ast.ReadCall;
 import rs.ac.bg.etf.pp1.ast.RelOpEqProduction;
 import rs.ac.bg.etf.pp1.ast.RelOpGrProduction;
@@ -67,6 +68,7 @@ import rs.ac.bg.etf.pp1.ast.RelOpLsProduction;
 import rs.ac.bg.etf.pp1.ast.RelOpLseProduction;
 import rs.ac.bg.etf.pp1.ast.RelOpNeProduction;
 import rs.ac.bg.etf.pp1.ast.ReturnProduction;
+import rs.ac.bg.etf.pp1.ast.ReturnStatement;
 import rs.ac.bg.etf.pp1.ast.StartOfForLoopProduction;
 import rs.ac.bg.etf.pp1.ast.StartOfIfStmtProduction;
 import rs.ac.bg.etf.pp1.ast.VarUse;
@@ -81,6 +83,40 @@ public class CodeGenerator extends VisitorAdaptor {
 	private int mainPc = 0;
 	public int getMainPc() {
 		return mainPc;
+	}
+	
+	public void visit(ProgName progName) {
+		Obj ord = Tab.find("ord");
+		Obj chr = Tab.find("chr");
+		Obj len = Tab.find("len");
+
+		//ORD
+		ord.setAdr(Code.pc);
+		Code.put(Code.enter);
+		Code.put(ord.getLevel());
+		Code.put(ord.getLocalSymbols().size());	
+		Code.put(Code.load_n);
+		Code.put(Code.exit);
+		Code.put(Code.return_);
+
+		//CHR
+		chr.setAdr(Code.pc);
+		Code.put(Code.enter);
+		Code.put(chr.getLevel());
+		Code.put(chr.getLocalSymbols().size());	
+		Code.put(Code.load_n);
+		Code.put(Code.exit);
+		Code.put(Code.return_);
+	
+		//LEN
+		len.setAdr(Code.pc);
+		Code.put(Code.enter);
+		Code.put(len.getLevel());
+		Code.put(len.getLocalSymbols().size());	
+		Code.put(Code.load_n);
+		Code.put(Code.arraylength);
+		Code.put(Code.exit);
+		Code.put(Code.return_);
 	}
 	
 	public void visit(PrintStmtProduction printStmtProd) {
@@ -177,6 +213,8 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(MethDecl methDecl) {
+		if(methDecl.getMethBegin().obj.getType() != Tab.noType)
+			Code.put(Code.const_1);
 		Code.put(Code.exit);
 		Code.put(Code.return_);
 	}
@@ -520,5 +558,10 @@ public class CodeGenerator extends VisitorAdaptor {
 
 		public void visit(ContinueProduction contProd) {
 			Code.putJump(postAddrStack.peek());
+		}
+		
+		public void visit(ReturnStatement returnStat) {
+			Code.put(Code.exit);
+			Code.put(Code.return_);
 		}
 }
