@@ -111,6 +111,7 @@ MultipleVarDecl ::= (MultipleVarDeclProduction) MultipleVarDecl COMMA MultipleVa
 				; 
 
 VarDecl  ::= (MultipleVariableDecl) Type:varType MultipleVarDecl SEMI
+		 | 	 (MultipleVarDeclExprErrorSemi) error:lcommasemi {: parser.report_error("Izvrsen oporavak do ', ili ;' u deklaraciji globalne promenljive", lcommasemi); :}
 		 ;
 
 VarDeclList ::= (VarDeclListProduction) VarDeclList VarDecl

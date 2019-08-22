@@ -2,8 +2,7 @@ program prog
 
 	int niz1[];
 	
-	int x ;
-
+	int  *y ,x, z, a ;
 	
 {
 
@@ -16,8 +15,6 @@ program prog
 	
 		niz1 = new int[45];
 	
-		print(ord('A'));
-		print(chr(65));
 		print(len(niz1));	
 		
 		proba(5);
