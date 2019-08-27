@@ -1,0 +1,108 @@
+//Test 302
+
+program test302
+
+char c;
+int i, j, niz[], min, minIdx, temp;
+
+enum Enum{Jedan = 1, Dva, Tri}
+
+Enum enumNiz[];
+{	
+
+	int sum(int z, int d)
+	{
+		return z + d;
+	}
+
+	void funkcija1(int niz[]) {
+		for(i = 0;;) {
+			if (i >= len(niz))
+				break;
+			if(niz[i] < 0)
+				niz[i] = -niz[i];
+			niz[i]++;
+			i++;
+			continue;
+		}
+	}
+	
+	void printNiz(int niz[]) int i; {
+		for(i=0; i < len(niz); i++){
+			print(niz[i]);
+			print(' ');
+		}
+		print(eol);
+	}
+	
+	void selectionSort(int niz[]) {
+	//print(-1);print(':');printNiz(niz);
+		for(i = 0; i < len(niz) - 1; i++) {
+			minIdx = i;
+			for(j = i + 1; j < len(niz); j++)
+				if(niz[minIdx] < niz[j])
+					minIdx = j;
+					
+			temp = niz[minIdx];
+			niz[minIdx] = niz[i];
+			niz[i] = temp;
+			//print(i);print(':');
+			//printNiz(niz);
+		}
+	}
+
+	
+	void main()
+	{
+		c = chr(ord('P')); 
+		if(c >= 'A') {
+			if (c == 'P')
+				print(c);
+			else
+				print('S');
+		} else {
+			print(chr(83));
+		}
+		
+		niz = new int[5] {-3, 4, 1, 8, 6};
+		
+		if(niz[0] != -3)
+			print('R');
+		else if(niz[0] == -3)
+			print('E');
+
+		niz[0]=4;
+		
+		if( false || niz[0] == 4)
+			print('D');
+		else
+			print('A');
+			
+		if( false && true || true && true)
+			print('E');
+		else
+			print('N');
+			
+		enumNiz = new Enum[3] {Enum.Jedan, Enum.Dva, Enum.Tri};
+		
+		if(sum(enumNiz[0], enumNiz[1]) == Enum.Tri)
+			print('R');
+		else
+			print('j');
+			
+		print(eol);
+			
+		printNiz(niz);
+		funkcija1(niz);
+		printNiz(niz);
+		selectionSort(niz);
+		printNiz(niz);
+		
+		if(niz[len(niz) - 1] != 2)
+			print('E');
+		else
+			print('U');
+	
+	}
+}
+

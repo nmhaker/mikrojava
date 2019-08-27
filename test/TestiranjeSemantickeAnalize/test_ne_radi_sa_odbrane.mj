@@ -2,8 +2,11 @@ program prog
 
 	int niz1[];
 	
-	int  *y ,x, z, a ;
+	int  y ,x, z, a ;
 	
+	enum Boja { CRNO, CRVENO, BELO }
+	
+	Boja nizEnum[];
 {
 
 	int proba(int a) {
@@ -13,11 +16,10 @@ program prog
 
 	void main() {
 	
-		niz1 = new int[45];
-	
-		print(len(niz1));	
-		
-		proba(5);
+		niz1 = new int[2]{2,3};
+		nizEnum = new Boja[3]{Boja.CRNO, Boja.BELO, Boja.CRVENO};
+
+
 	}
 	
 }

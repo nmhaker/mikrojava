@@ -765,7 +765,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 		private Integer numOfInitializators = 0;
 		public void visit(InstArrayInitNodeProduction instArrInitNodeProd) {
-			if(!exprType.assignableTo(instPrimExprType)) {
+			if(exprType.equals(Tab.intType) && instPrimExprType.getKind()==6) {
+				if(!usingEnumType.assignableTo(instPrimExprType)) {
+					report_error("Greska tip inicijalizatora se ne slaze sa tipom niza!", instArrInitNodeProd);
+					errorDetected = true;
+				}
+			} else if(!exprType.assignableTo(instPrimExprType)) {
 				report_error("Greska tip inicijalizatora se ne slaze sa tipom niza!", instArrInitNodeProd);
 				errorDetected = true;
 			}

@@ -105,6 +105,24 @@
 		
 	</target>	
 	
+	<target name="disasmMilivoje">
+		<java classname="rs.etf.pp1.mj.runtime.disasm">
+			<arg value="test/program.obj" />
+			<classpath>
+				<pathelement location="lib/mj-runtime.jar" />
+			</classpath>
+		</java>		
+	</target>	
+	
+	<target name="disasmMilivoje2">
+		<java classname="rs.etf.pp1.mj.runtime.disasm">
+			<arg value="test/program2.obj" />
+			<classpath>
+				<pathelement location="lib/mj-runtime.jar" />
+			</classpath>
+		</java>		
+	</target>	
+
 	<target name="disasmMoje">
 		<java classname="rs.etf.pp1.mj.runtime.disasm">
 			<arg value="test/test_ne_radi_sa_odbrane.obj" />
@@ -173,5 +191,23 @@
 			</classpath>
 		</java>		
 	</target>
+
+	<target name="runTestMilivoje" depends="disasmMilivoje">
+		<java classname="rs.etf.pp1.mj.runtime.Run">
+			<arg value="test/program.obj" />
+			<classpath>
+				<pathelement location="lib/mj-runtime.jar" />
+			</classpath>
+		</java>		
+	</target>
+	
+	<target name="runTestMilivoje2" depends="disasmMilivoje2">
+			<java classname="rs.etf.pp1.mj.runtime.Run">
+				<arg value="test/program2.obj" />
+				<classpath>
+					<pathelement location="lib/mj-runtime.jar" />
+				</classpath>
+			</java>		
+		</target>
 
 </project>

@@ -25,7 +25,7 @@ public class Compiler {
 	
 	private static boolean testPassed = false;
 	
-	private static final boolean debugAST = false;
+	private static final boolean debugAST = true;
 	
 	public static void testirajSintaksnuAnalizu(Logger log) {
 		BufferedReader br = null;
@@ -281,6 +281,7 @@ public class Compiler {
 			
 			String path = "test/TestiranjeSemantickeAnalize/";
 			String fajlovi[] = new String[numOfFiles];
+			//fajlovi[0] = "program";
 			fajlovi[0] = "test_ne_radi_sa_odbrane";
 
 			File sourceCode[] = new File[numOfFiles];
@@ -375,22 +376,22 @@ public class Compiler {
 
 		Logger log = Logger.getLogger(Compiler.class);
 		
-		testirajSintaksnuAnalizu(log);
-
-		if(testPassed) {
-			testPassed = false;
-			testirajSemantickuAnalizu(log);
-		}
-
-		if(testPassed) {
-			testPassed = false;
-			testirajJavniTest(log);
-		}
-
-		if(testPassed) {
-			testPassed = false;
+//		testirajSintaksnuAnalizu(log);
+//
+//		if(testPassed) {
+//			testPassed = false;
+//			testirajSemantickuAnalizu(log);
+//		}
+//
+//		if(testPassed) {
+//			testPassed = false;
+//			testirajJavniTest(log);
+//		}
+//
+//		if(testPassed) {
+//			testPassed = false;
 			testirajMoje(log);
-		}
+//		}
 
 	}
 	
